@@ -6,17 +6,14 @@ class Router
 {
     protected array $routes;
     public Request $request;
-    public Response $response;
 
     /**
      * Router constructor.
      * @param Request $request
-     * @param Response $response
      */
-    public function __construct(Request $request, Response $response)
+    public function __construct(Request $request)
     {
         $this->request = $request;
-        $this->response = $response;
 
     }
 
@@ -37,7 +34,7 @@ class Router
         $method = $this->request->getMethod();
         $callback = $this->routes[$method][$path] ?? false;
         if ($callback === false) {
-            Application::$app->response->setStatusCode(404);
+            Response::setStatusCode(404);
             return View::render('utils/_404');
         }
         if (is_string($callback)) {

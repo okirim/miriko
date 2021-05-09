@@ -36,7 +36,7 @@ class Query
         }
         $row = $statement->execute();
         if ($row) {
-            return self::findOne($table, $data, $columns_str);
+            return self::findOne($table, $data,$columns_str);
         }
     }
 
@@ -45,56 +45,92 @@ class Query
         $params_size = sizeof($param);
         $i = 0;
         $result = [];
-        $fields=['id',...explode(',',$columns)];
-        $columns = $columns === '' ? '*' : implode(',',$fields);
+        $fields = ['id', ...explode(',', $columns)];
+        $columns = $columns === '' ? '*' : implode(',', $fields);
         foreach ($param as $key => $value) {
             $bindValue = self::bind($key);
-            $statement = self::$database->pdo->prepare("SELECT $columns FROM $table WHERE $key=$bindValue;");
+            $statement = self::$database->pdo->prepare("SELECT $columns FROM $table WHERE $key=$bindValue LIMIT 1;");
             $statement->bindParam($bindValue, $value);
             $statement->execute();
-            $result[] = $statement->fetch();
+            $result[] = $statement->fetch(\PDO::FETCH_NAMED);
         }
         return end($result);
     }
-    public static function paginate(string $table,int $limit,int $currentPage=1)
+
+    public static function paginate(string $table, int $limit, int $page = 1, $filter=[], string $columns='*')
     {
-        $size=self::rowCount($table);
-        $pages=$size>0 ?ceil($size/$limit): 1 ;
-        $firstPage=1;
-        $lastPage=$pages;
-        $nextPage=$currentPage >=$pages? null : $currentPage+1;
-        $prevPage=$currentPage <=0? 1 : $currentPage-1;
-        $page=1;
-        $offset=$currentPage > 1 ? $limit *($currentPage-1): 0;
-       $statement=self::$database->pdo->prepare("SELECT * FROM $table LIMIT $limit OFFSET $offset");
-       $statement->execute();
-        $results=$statement->fetchAll();
-         return  [
-             'data'=>$results,
-             'currentPage'=>$currentPage,
-             'lastPage'=>$lastPage,
-             'nextPage'=>$nextPage,
-             'prevPage'=>$prevPage,
-             'totalPages'=>$pages
-         ];
+        $filter =self::filterQuery($filter);
+        $size = self::rowCount($table);
+        $pages = $size > 0 ? ceil($size / $limit) : 1;
+        $firstPage = 1;
+        $lastPage = $pages;
+        $nextPage = $page >= $pages ? null : $page + 1;
+        $prevPage = $page <= 1 ? null : $page - 1;
+        $offset = $page > 1 ? $limit * ($page - 1) : 0;
+        $statement = self::$database->pdo->prepare("SELECT $columns FROM $table WHERE $filter LIMIT $limit OFFSET $offset");
+        $statement->execute();
+        $results = $statement->fetchAll(\PDO::FETCH_CLASS);
+        return [
+            'data' => $results,
+            'currentPage' => $page,
+            'lastPage' => $lastPage,
+            'nextPage' => $nextPage,
+            'prevPage' => $prevPage,
+            'totalPages' => $pages
+        ];
 
     }
-    public static function find(string $table,$columns=null)
+
+    public static function find(string $table, array $filter = [], $columns ='*')
     {
-        $columns=$columns ===null ? '*' :$columns;
-        $statement=self::$database->pdo->prepare("SELECT $columns FROM $table ");
+        $filter =self::filterQuery($filter);
+        $statement = self::$database->pdo->prepare("SELECT $columns FROM $table WHERE $filter");
+
         $statement->execute();
-        $query=$statement->fetchAll();
-         return json_encode($query);
+        return $statement->fetchAll(\PDO::FETCH_CLASS);
     }
+
     public static function rowCount(string $table)
     {
-        $statement=self::$database->pdo->prepare("SELECT * FROM $table ");
+        $statement = self::$database->pdo->prepare("SELECT * FROM $table ");
         $statement->execute();
         return $statement->rowCount();
     }
-    protected static function bind($key)
+
+    protected static function bind(string $key)
     {
         return preg_replace('/\w+/', ":$key", $key);
+    }
+
+    protected static function filterQuery($filter): string
+    {
+        $filter = count($filter) ? $filter :"''=''";
+        $query = '';
+
+        if (gettype($filter) === 'array' && count($filter)) {
+            foreach ($filter as $key => $value) {
+                $query .= " $key '$value' ";
+                $query .= "AND";
+            }
+            $query_array = explode(' ', $query);
+            array_splice($query_array, -1);
+            return implode(' ', $query_array);
+        }
+        return $filter;
+    }
+    protected static function filterPaginateQuery($filter): string
+    {
+        $filter = count($filter) > 0 ? $filter : "''=''";
+        $query = '';
+        if (gettype($filter) === 'array') {
+            foreach ($filter as $key => $value) {
+                $query .= " $key='$value' ";
+                $query .= "AND";
+            }
+        }
+        $query_array = explode(' ', $query);
+        array_splice($query_array, -1);
+        return implode(' ', $query_array);
+
     }
 }

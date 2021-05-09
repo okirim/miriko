@@ -28,10 +28,13 @@ class Request
             }
         }
         if ($this->getMethod() === 'post') {
+//            $_POST = json_decode(file_get_contents('php://input'), true);
+
             foreach ($_POST as $key => $value) {
                 $body[$key] = filter_input(INPUT_POST, $key, FILTER_SANITIZE_SPECIAL_CHARS);
             }
         }
+
         if($param){
            return  $body[$param];
         }

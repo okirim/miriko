@@ -3,7 +3,6 @@
 use App\controllers\AuthController;
 use App\controllers\HomeController;
 
-
 $app->router->get('/', [HomeController::class, 'index']);
 $app->router->get('/contact', [HomeController::class, 'contact']);
 $app->router->post('/login', [AuthController::class, 'login']);

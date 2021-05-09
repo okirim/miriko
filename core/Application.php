@@ -6,7 +6,6 @@ class Application
 {
     public Router $router;
     public Request $request;
-    public Response $response;
     public Database $database;
     public Migrations $statement;
     public Query $query;
@@ -22,12 +21,11 @@ class Application
     {
         self::$app=$this;
         self::$ROOT_DIR=$rootPath;
-        $this->response=new Response();
         $this->database=new Database($config['database']);
         $this->statement=new Migrations($this->database);
         $this->query=new Query($this->database);
         $this->request=new Request();
-        $this->router = new Router($this->request,$this->response);
+        $this->router = new Router($this->request);
     }
 
     public function run()

@@ -1,8 +1,6 @@
 <?php
-
-require_once __DIR__ . '/../vendor/autoload.php';
-
 use App\core\Application;
+require_once __DIR__ . '/../vendor/autoload.php';
 
 require_once __DIR__.'/../providers/provider.php';
 
