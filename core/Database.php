@@ -6,21 +6,16 @@ namespace App\core;
 
 class Database
 {
-    public \PDO $pdo;
+    public static \PDO $pdo;
 
-    /**
-     * Database constructor.
-     * @param array $config
-     */
-    public function __construct(array $config)
+    public function __construct()
     {
-        $dsn = $config['dsn'];
-        $user = $config['user'];
-        $password = $config['password'];
+            $dsn = $_ENV['DB_DSN'];
+            $user = $_ENV['DB_USER'];
+            $password = $_ENV['DB_PASSWORD'];
 
-        $this->pdo = new \PDO($dsn, $user, $password);
-        $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-
+            self::$pdo = new \PDO($dsn, $user, $password);
+            self::$pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     }
 
     public function migrate()
@@ -35,7 +30,7 @@ class Database
 
     protected function createTableMigrations()
     {
-        $this->pdo->exec("CREATE TABLE IF NOT EXISTS migrations ( 
+        self::$pdo->exec("CREATE TABLE IF NOT EXISTS migrations ( 
                          id INT AUTO_INCREMENT PRIMARY KEY,
                          migration VARCHAR(255), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
                          ) ENGINE=INNODB;"
@@ -45,7 +40,7 @@ class Database
     protected function selectAppliedMigrations()
     {
         //get applied migrations from migrations table
-        $statement = $this->pdo->prepare("SELECT migration FROM migrations");
+        $statement = self::$pdo->prepare("SELECT migration FROM migrations");
         $statement->execute();
         return $statement->fetchAll(\PDO::FETCH_COLUMN);
     }
@@ -64,7 +59,7 @@ class Database
     protected function saveAppliedMigration(array $migrations)
     {
         foreach ($migrations as $migration) {
-            $statement = $this->pdo->prepare("INSERT INTO migrations (migration) values ('$migration') ");
+            $statement = self::$pdo->prepare("INSERT INTO migrations (migration) values ('$migration') ");
             $statement->execute();
         }
     }

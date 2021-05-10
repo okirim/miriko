@@ -4,38 +4,37 @@ namespace App\core;
 
 class Router
 {
-    protected array $routes;
-    public Request $request;
+    protected static array $routes;
 
-    /**
-     * Router constructor.
-     * @param Request $request
-     */
-    public function __construct(Request $request)
+    public static function get($path, $callback)
     {
-        $this->request = $request;
-
+        self::$routes['get'][$path] = $callback;
     }
 
-
-    public function get($path, $callback)
+    public static function post($path, $callback)
     {
-        $this->routes['get'][$path] = $callback;
+        self::$routes['post'][$path] = $callback;
     }
-
-    public function post($path, $callback)
+    public static function patch($path, $callback)
     {
-        $this->routes['post'][$path] = $callback;
+        self::$routes['patch'][$path] = $callback;
     }
-
-    public function resolve()
+    public static function put($path, $callback)
     {
-        $path = $this->request->getPath();
-        $method = $this->request->getMethod();
-        $callback = $this->routes[$method][$path] ?? false;
+        self::$routes['put'][$path] = $callback;
+    }
+    public static function delete($path, $callback)
+    {
+        self::$routes['delete'][$path] = $callback;
+    }
+    public static function resolve()
+    {
+        $path =  Request::getPath();
+        $method = Request::getMethod();
+        $callback = self::$routes[$method][$path] ?? false;
         if ($callback === false) {
-            Response::setStatusCode(404);
-            return View::render('utils/_404');
+         return  Response::json_response_error('page not found','failed',404);
+//            return View::render('utils/_404');
         }
         if (is_string($callback)) {
             return View::render($callback);

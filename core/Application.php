@@ -12,24 +12,19 @@ class Application
     public static string $ROOT_DIR;
     public static Application $app;
 
-    /**
-     * Application constructor.
-     * @param string $rootPath
-     * @param array $config
-     */
-    public function __construct(string $rootPath,array $config)
+    public function __construct()
     {
         self::$app=$this;
-        self::$ROOT_DIR=$rootPath;
-        $this->database=new Database($config['database']);
-        $this->statement=new Migrations($this->database);
-        $this->query=new Query($this->database);
+        self::$ROOT_DIR=dirname(__DIR__);
+        $this->database=new Database();
+        $this->statement=new Migrations();
+        $this->query=new Query();
         $this->request=new Request();
         $this->router = new Router($this->request);
     }
 
     public function run()
     {
-       echo $this->router->resolve();
+       echo $this->router::resolve();
     }
 }

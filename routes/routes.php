@@ -2,13 +2,16 @@
 
 use App\controllers\AuthController;
 use App\controllers\HomeController;
+use App\core\Router;
 
-$app->router->get('/', [HomeController::class, 'index']);
-$app->router->get('/contact', [HomeController::class, 'contact']);
-$app->router->post('/login', [AuthController::class, 'login']);
-$app->router->get('/login', [AuthController::class, 'loginPage']);
-$app->router->get('/register', [AuthController::class, 'registerPage']);
-$app->router->post('/register', [AuthController::class, 'register']);
+Router::get('/', [HomeController::class, 'index']);
+Router::get('/contact', [HomeController::class, 'contact']);
+Router::post('/login', [AuthController::class, 'login']);
+Router::get('/login', [AuthController::class, 'loginPage']);
+Router::get('/register', [AuthController::class, 'registerPage']);
+Router::post('/register', [AuthController::class, 'register']);
+//Router::patch('/register', [AuthController::class, 'register']);
+
 
 
 

@@ -6,7 +6,7 @@ namespace App\core;
 
 class Request
 {
-    public function getPath()
+    public static function getPath()
     {
         $path = $_SERVER['REQUEST_URI'] ?? '/';
         $questionMark = strpos($path, '?');
@@ -14,44 +14,70 @@ class Request
         return substr($path, 0, $questionMark);
     }
 
-    public function getMethod()
+    public static function getMethod()
     {
         return strtolower($_SERVER['REQUEST_METHOD']);
     }
 
-    public function getBody($param=null)
+    public static function getBody($param = null)
     {
         $body = [];
-        if ($this->getMethod() === 'get') {
+        if (self::getMethod() === 'get') {
+            $_GET = json_decode(file_get_contents('php://input'), true);
             foreach ($_GET as $key => $value) {
-                $body[$key] = filter_input(INPUT_GET, $key, FILTER_SANITIZE_SPECIAL_CHARS);
+                $body[$key] = filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
             }
         }
-        if ($this->getMethod() === 'post') {
-//            $_POST = json_decode(file_get_contents('php://input'), true);
-
+        if (self::getMethod() === 'post') {
+            $_POST = json_decode(file_get_contents('php://input'), true);
             foreach ($_POST as $key => $value) {
-                $body[$key] = filter_input(INPUT_POST, $key, FILTER_SANITIZE_SPECIAL_CHARS);
+                $body[$key] = filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
             }
         }
-
-        if($param){
-           return  $body[$param];
+        if (self::getMethod() === 'patch') {
+            parse_str(file_get_contents('php://input'), $_PATCH);
+            if (!is_array($_PATCH)) {
+                Response::json_response_error('invalid patch request');
+            }
+            foreach ($_PATCH as $key => $value) {
+                $body[$key] = filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
+            }
+        }
+        if (self::getMethod() === 'put') {
+            parse_str(file_get_contents('php://input'), $_PUT);
+            if (!is_array($_PUT)) {
+                Response::json_response_error('invalid put request');
+            }
+            foreach ($_PUT as $key => $value) {
+                $body[$key] = filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
+            }
+        }
+        if (self::getMethod() === 'delete') {
+            parse_str(file_get_contents('php://input'), $_DELETE);
+            if (!is_array($_DELETE)) {
+                Response::json_response_error('invalid put request');
+            }
+            foreach ($_DELETE as $key => $value) {
+                $body[$key] = filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
+            }
+        }
+        if ($param) {
+            return $body[$param];
         }
         return $body;
     }
 
-    public function getParams()
+    public static function getParams()
     {
 
     }
 
-    public function getQuery()
+    public static function getQuery()
     {
 
     }
 
-    public static function Body($param=null)
+    public static function Body($param = null)
     {
         $req = self::instanceRequest();
         return $req->getBody($param);
@@ -61,6 +87,7 @@ class Request
     {
         return new Request();
     }
+
 }
 
 

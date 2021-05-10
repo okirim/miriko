@@ -4,11 +4,24 @@
 namespace App\core;
 
 
-class Query
-{
+use http\Message\Body;
 
-    public static function create($table, $data)
+class Olivine
+{
+    public static string $table;
+
+    /**
+     * Olivine constructor.
+     * @param string $table
+     */
+    public function __construct(string $table)
     {
+        self::$table = $table;
+    }
+
+    public static function create($data)
+    {
+        $table = self::$table;
         $columns = [];
         $bindValues = [];
         $values = [];
@@ -26,12 +39,13 @@ class Query
         }
         $row = $statement->execute();
         if ($row) {
-            return self::findOne($table, $data,$columns_str);
+            return self::findOne($data, $columns_str);
         }
     }
 
-    public static function findOne(string $table, array $param, string $columns = '')
+    public static function findOne(array $param, string $columns = '')
     {
+        $table = self::$table;
         $params_size = sizeof($param);
         $i = 0;
         $result = [];
@@ -47,9 +61,10 @@ class Query
         return end($result);
     }
 
-    public static function paginate(string $table, int $limit, int $page = 1, $filter=[], string $columns='*')
+    public static function paginate(int $limit, int $page = 1, $filter = [], string $columns = '*')
     {
-        $filter =self::filterQuery($filter);
+        $table = self::$table;
+        $filter = self::filterQuery($filter);
         $size = self::rowCount($table);
         $pages = $size > 0 ? ceil($size / $limit) : 1;
         $firstPage = 1;
@@ -71,18 +86,20 @@ class Query
 
     }
 
-    public static function find(string $table, array $filter = [], $columns ='*')
+    public static function find(array $filter = [], $columns = '*')
     {
-        $filter =self::filterQuery($filter);
-        $statement =Database::$pdo->prepare("SELECT $columns FROM $table WHERE $filter");
+        $table = self::$table;
+        $filter = self::filterQuery($filter);
+        $statement = Database::$pdo->prepare("SELECT $columns FROM $table WHERE $filter");
 
         $statement->execute();
         return $statement->fetchAll(\PDO::FETCH_CLASS);
     }
 
-    public static function rowCount(string $table)
+    public static function rowCount()
     {
-        $statement =Database::$pdo->prepare("SELECT * FROM $table ");
+        $table = self::$table;
+        $statement = Database::$pdo->prepare("SELECT * FROM $table ");
         $statement->execute();
         return $statement->rowCount();
     }
@@ -94,7 +111,7 @@ class Query
 
     protected static function filterQuery($filter): string
     {
-        $filter = count($filter) ? $filter :"''=''";
+        $filter = count($filter) ? $filter : "''=''";
         $query = '';
 
         if (gettype($filter) === 'array' && count($filter)) {
@@ -108,19 +125,13 @@ class Query
         }
         return $filter;
     }
-    protected static function filterPaginateQuery($filter): string
-    {
-        $filter = count($filter) > 0 ? $filter : "''=''";
-        $query = '';
-        if (gettype($filter) === 'array') {
-            foreach ($filter as $key => $value) {
-                $query .= " $key='$value' ";
-                $query .= "AND";
-            }
-        }
-        $query_array = explode(' ', $query);
-        array_splice($query_array, -1);
-        return implode(' ', $query_array);
 
+    public function innerJoin(string $jointTable)
+    {
+        $table1=self::$table;
+        Database::$pdo->prepare("SELECT *
+                 FROM $table1
+                 INNER JOIN $jointTable
+                 WHERE $table1.id = $jointTable.id");
     }
 }
