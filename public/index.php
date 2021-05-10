@@ -1,17 +1,13 @@
 <?php
 use App\core\Application;
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
-
-
 require_once __DIR__ . '/../vendor/autoload.php';
 
-require_once __DIR__.'/../providers/provider.php';
+//.env (adding dotenv package)
+$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+$dotenv->load();
 
-require_once __DIR__.'/../config/config.php';
-
-$app = new Application(dirname(__DIR__),$config);
+$app = new Application();
 
 require_once __DIR__.'/../routes/routes.php';
 
