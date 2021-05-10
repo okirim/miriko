@@ -1,5 +1,10 @@
 <?php
 use App\core\Application;
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+
+
 require_once __DIR__ . '/../vendor/autoload.php';
 
 require_once __DIR__.'/../providers/provider.php';

@@ -4,6 +4,7 @@
 namespace App\controllers;
 
 
+use App\core\Mail;
 use App\core\Query;
 use App\core\Request;
 use App\core\Response;
@@ -43,18 +44,23 @@ class AuthController
         $data = [
             'username' => $username,
             'email' => $email,
-            'password' => password_hash($password,PASSWORD_ARGON2I),
+            'password' => password_hash($password, PASSWORD_ARGON2I),
         ];
-       $user = Query::create('users', $data);
-      return Response::json_response($user);
+        $user = Query::create('users', $data);
+        return Response::json_response($user);
 
     }
 
     public function registerPage()
 
     {
-
-        return View::render('register');
+        $mail = Mail::make();
+        $mail->from('okirimkadiro@gmail.com')
+            ->to('okirim.abdelkader.dev@gmail.com')
+            ->subject('test')
+            ->view('message.php',['name'=>'kadiro'])
+            ->send();
+       return View::render('register');
 
     }
 }
