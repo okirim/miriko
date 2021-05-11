@@ -29,22 +29,27 @@ class AuthController
     public function register()
     {
 
-        $username = Request::Body('username');
-        $email = Request::Body('email');
-        $password = Request::Body('password');
-        $password_confirm = Request::Body('confirm_password');
+//        $username = Request::Body('username') ?? '';
+//        $email = Request::Body('email') ?? '';
+//        $password = Request::Body('password') ?? '';
+//        $password_confirm = Request::Body('confirm_password') ?? '';
+        $username = '';
+        $email ='';
+        $password ='';
+        $password_confirm = '';
          $user=new RegisterModel($username,$email,$password,$password_confirm);
 
-         if(!$user->isValidate()){
-             return $user->validation_error_response();
-         }
-        $data = [
-            'username' => $username,
-            'email' => $email,
-            'password' => password_hash($password, PASSWORD_ARGON2I),
-        ];
+//         if(!$user->isValidate()){
+//             return $user->validation_error_response();
+//         }
+//        $data = [
+//            'username' => $username,
+//            'email' => $email,
+//            'password' => password_hash($password, PASSWORD_ARGON2I),
+//        ];
 //      $user = Query::create('users', $data);
-        $user = RegisterModel::create($data);
+//        $user = RegisterModel::create($data);
+       $user= RegisterModel::leftJoin('comments');
         return Response::json_response($user);
 
     }

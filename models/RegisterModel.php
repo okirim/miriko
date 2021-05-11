@@ -44,8 +44,5 @@ class RegisterModel extends Model
         return true;
     }
 
-    public function comments()
-    {
-        return $this->hasMany('comments');
-    }
+
 }

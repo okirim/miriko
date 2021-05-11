@@ -74,7 +74,7 @@ class Olivine
         $offset = $page > 1 ? $limit * ($page - 1) : 0;
         $statement = Database::$pdo->prepare("SELECT $columns FROM $table WHERE $filter LIMIT $limit OFFSET $offset");
         $statement->execute();
-        $results = $statement->fetchAll(\PDO::FETCH_CLASS);
+        $results = $statement->fetchAll(\PDO::FETCH_NAMED);
         return [
             'data' => $results,
             'currentPage' => $page,
@@ -93,7 +93,7 @@ class Olivine
         $statement = Database::$pdo->prepare("SELECT $columns FROM $table WHERE $filter");
 
         $statement->execute();
-        return $statement->fetchAll(\PDO::FETCH_CLASS);
+        return $statement->fetchAll(\PDO::FETCH_NAMED);
     }
 
     public static function rowCount()
@@ -126,12 +126,85 @@ class Olivine
         return $filter;
     }
 
-    public function innerJoin(string $jointTable)
+    public static function hasMany(string $jointTable)
     {
-        $table1=self::$table;
-        Database::$pdo->prepare("SELECT *
-                 FROM $table1
-                 INNER JOIN $jointTable
-                 WHERE $table1.id = $jointTable.id");
+        //        $table = self::$table;
+//        $id = substr($table, 0, -1) . '_id';
+//        $res = [];
+//        $statement = Database::$pdo->prepare("SELECT $table.*,$jointTable.id AS _id
+//        FROM $table LEFT JOIN $jointTable
+//        ON $table.id =$id"
+//        );
+//        $statement->execute();
+//        $table1 = $statement->fetchAll(\PDO::FETCH_NAMED);
+//
+//        foreach ($table1 as $table) {
+//            $id = $table['_id'];
+//            if (!empty($id)) {
+//                $statement = Database::$pdo->prepare("SELECT *
+//                                                              FROM $jointTable
+//                                                              WHERE $jointTable.id =$id"
+//                );
+//                $statement->execute();
+//                $table2[] = $statement->fetchAll(\PDO::FETCH_NAMED);
+//                for ($i = 0; $i < count($table1); $i++) {
+//                    for ($j = 0; $j < count($table2); $j++) {
+//                        if ($table1[$i]['id'] === $table2[$j][0]['user_id']) {
+//                            $table1[$i][$jointTable]= $table2[$j][0];
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return $table1;
+//        echo '<pre>';
+////        var_dump($table2[0][0]['user_id']);
+//        var_dump($table1);
+//        echo '</pre>';
+//        exit();
     }
+
+    public static function leftJoin(string $jointTable)
+    {
+        $table = self::$table;
+        $id = substr($table, 0, -1) . '_id';
+        $results = [];
+        $statement = Database::$pdo->prepare("SELECT $table.*,$jointTable.id AS _id
+        FROM $table LEFT JOIN $jointTable
+        ON $table.id =$id"
+        );
+        $statement->execute();
+        $table1 = $statement->fetchAll(\PDO::FETCH_NAMED);
+
+        foreach ($table1 as $table) {
+            $id = $table['_id'];
+            if (!empty($id)) {
+                $statement = Database::$pdo->prepare("SELECT *
+                                                              FROM $jointTable
+                                                              WHERE $jointTable.id =$id"
+                );
+                $statement->execute();
+                $table2[] = $statement->fetchAll(\PDO::FETCH_NAMED);
+                for ($i = 0; $i < count($table1); $i++) {
+                    for ($j = 0; $j < count($table2); $j++) {
+                        if ($table1[$i]['id'] === $table2[$j][0]['user_id']) {
+                            //joinTable id = $table2[$j][0]['id']
+                            $jointTable_id=$table2[$j][0]['id'];
+                            $table1[$i][$jointTable][$jointTable_id] = $table2[$j][0];
+                        }
+                    }
+                    $results[$table1[$i]['id']]=$table1[$i];
+
+                }
+            }
+        }
+        $data=[];
+        foreach ($results as $key=>$value){
+            $data[]=$value;
+        }
+
+        return $data;
+
+    }
+
 }
