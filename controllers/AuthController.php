@@ -49,8 +49,9 @@ class AuthController
 //        ];
 //      $user = Query::create('users', $data);
 //        $user = RegisterModel::create($data);
-       $user= RegisterModel::leftJoin('comments');
-        return Response::json_response($user);
+        $users=RegisterModel::leftJoin(['comments','posts']);
+        //RegisterModel::hasMany('comments');
+        return Response::json_response($users);
 
     }
 

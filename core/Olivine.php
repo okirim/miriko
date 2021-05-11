@@ -3,9 +3,6 @@
 
 namespace App\core;
 
-
-use http\Message\Body;
-
 class Olivine
 {
     public static string $table;
@@ -128,9 +125,9 @@ class Olivine
 
     public static function hasMany(string $jointTable)
     {
-        //        $table = self::$table;
+//        $table = self::$table;
 //        $id = substr($table, 0, -1) . '_id';
-//        $res = [];
+//        $results = [];
 //        $statement = Database::$pdo->prepare("SELECT $table.*,$jointTable.id AS _id
 //        FROM $table LEFT JOIN $jointTable
 //        ON $table.id =$id"
@@ -150,61 +147,69 @@ class Olivine
 //                for ($i = 0; $i < count($table1); $i++) {
 //                    for ($j = 0; $j < count($table2); $j++) {
 //                        if ($table1[$i]['id'] === $table2[$j][0]['user_id']) {
-//                            $table1[$i][$jointTable]= $table2[$j][0];
+//                            //joinTable id = $table2[$j][0]['id']
+//                            $jointTable_id=$table2[$j][0]['id'];
+//                            $table1[$i][$jointTable][$jointTable_id] = $table2[$j][0];
+//
 //                        }
 //                    }
+//                    $results[$table1[$i]['id']]=$table1[$i];
+//
 //                }
 //            }
 //        }
-//        return $table1;
-//        echo '<pre>';
-////        var_dump($table2[0][0]['user_id']);
-//        var_dump($table1);
-//        echo '</pre>';
-//        exit();
+//        $data=[];
+//        foreach ($results as $key=>$value){
+//            $data[]=$value;
+//        }
+//
+//        return $data;
     }
 
-    public static function leftJoin(string $jointTable)
+    public static function leftJoin(array $jointTables)
     {
         $table = self::$table;
         $id = substr($table, 0, -1) . '_id';
         $results = [];
-        $statement = Database::$pdo->prepare("SELECT $table.*,$jointTable.id AS _id
-        FROM $table LEFT JOIN $jointTable
-        ON $table.id =$id"
-        );
-        $statement->execute();
-        $table1 = $statement->fetchAll(\PDO::FETCH_NAMED);
 
-        foreach ($table1 as $table) {
-            $id = $table['_id'];
-            if (!empty($id)) {
-                $statement = Database::$pdo->prepare("SELECT *
-                                                              FROM $jointTable
-                                                              WHERE $jointTable.id =$id"
-                );
-                $statement->execute();
-                $table2[] = $statement->fetchAll(\PDO::FETCH_NAMED);
-                for ($i = 0; $i < count($table1); $i++) {
-                    for ($j = 0; $j < count($table2); $j++) {
-                        if ($table1[$i]['id'] === $table2[$j][0]['user_id']) {
-                            //joinTable id = $table2[$j][0]['id']
-                            $jointTable_id=$table2[$j][0]['id'];
-                            $table1[$i][$jointTable][$jointTable_id] = $table2[$j][0];
-                        }
-                    }
-                    $results[$table1[$i]['id']]=$table1[$i];
+           $statement = Database::$pdo->prepare("SELECT $table.*,$jointTables[0].id AS _id
+                                                         FROM $table LEFT JOIN $jointTables[0]
+                                                         ON $table.id =$id"
+                                                 );
 
-                }
-            }
-        }
-        $data=[];
-        foreach ($results as $key=>$value){
-            $data[]=$value;
-        }
+           $statement->execute();
+           $table1 = $statement->fetchAll(\PDO::FETCH_NAMED);
+           foreach ($table1 as $table) {
+               $id = $table['_id'];
+               if (!empty($id)) {
+                   $statement = Database::$pdo->prepare("SELECT *
+                                                              FROM $jointTables[0]
+                                                              WHERE $jointTables[0].id =$id"
+                   );
+                   $statement->execute();
+                   $table2[] = $statement->fetchAll(\PDO::FETCH_NAMED);
+                   $data = array_unique($table2,SORT_REGULAR);
+                   for ($i = 0; $i < count($table1); $i++) {
+                       for ($j = 0; $j < count($data); $j++) {
+                           if ($table1[$i]['id'] === $data[$j][0]['user_id']
+                           ) {
+                               //joinTable id = $table2[$j][0]['id']
+                               $jointTable_id = $data[$j][0]['id'];
+                               $table1[$i][$jointTables[0]][] = $data[$j][0];
+                           }
+                       }
+                       $results[$table1[$i]['id']] = $table1[$i];
 
-        return $data;
+                   }
+               }
+           }
+           foreach ($results as $key => $value) {
+               if(!empty($results[$key][$jointTables[0]])){
+                   $results[$key][$jointTables[0]] = array_unique($results[$key][$jointTables[0]], SORT_REGULAR);
+               }
+           }
 
+
+        return $results;
     }
-
 }
