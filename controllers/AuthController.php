@@ -10,7 +10,8 @@ use App\core\Request;
 use App\core\Response;
 use App\core\Rules;
 use App\core\View;
-use App\models\RegisterModel;
+use App\models\User;
+use App\rules\UserRules;
 
 class AuthController
 {
@@ -23,35 +24,51 @@ class AuthController
 
     public function login()
     {
+        $email = Request::Body('email');
+        $password = Request::Body('password');
+        $isValid = UserRules::login(['email' => $email, 'password' => $password]);
 
+        if ($isValid !== true) {
+            return UserRules::login(['email' => $email, 'password' => $password]);
+        }
+        $user = User::Olivine()::findOne(['email' => $email]);
+        if (!$user) {
+            return Response::json_response_error('user not found');
+        }
+        $checkPassword = password_verify($password, $user->password);
+        if (!$checkPassword) {
+            return Response::json_response_error('invalid email or password');
+        }
+        return Response::json_response($user);
     }
 
     public function register()
     {
 
-//        $username = Request::Body('username') ?? '';
-//        $email = Request::Body('email') ?? '';
-//        $password = Request::Body('password') ?? '';
-//        $password_confirm = Request::Body('confirm_password') ?? '';
-        $username = '';
-        $email ='';
-        $password ='';
-        $password_confirm = '';
-         $user=new RegisterModel($username,$email,$password,$password_confirm);
+        $username = Request::Body('username');
+        $email = Request::Body('email');
+        $password = Request::Body('password');
+        $password_confirm = Request::Body('confirm_password');
 
-//         if(!$user->isValidate()){
-//             return $user->validation_error_response();
-//         }
-//        $data = [
-//            'username' => $username,
-//            'email' => $email,
-//            'password' => password_hash($password, PASSWORD_ARGON2I),
-//        ];
+        $fields = ['email' => $email,
+            'password' => $password,
+            'username' => $username,
+            'password_confirm' => $password_confirm
+        ];
+        $isValid = UserRules::register($fields);
+        if ($isValid !== true) {
+            return UserRules::register($fields);
+        }
+        $data = [
+            'username' => $username,
+            'email' => $email,
+            'password' => password_hash($password, PASSWORD_ARGON2I),
+        ];
 //      $user = Query::create('users', $data);
-//        $user = RegisterModel::create($data);
-        $users=RegisterModel::leftJoin(['comments','posts']);
-        //RegisterModel::hasMany('comments');
-        return Response::json_response($users);
+        $user = User::Olivine()::create($data);
+//        $users=User::leftJoin(['comments','posts']);
+        //User::hasMany('comments');
+        return Response::json_response($user);
 
     }
 
@@ -65,7 +82,7 @@ class AuthController
 //            ->view('message.php',['name'=>'zino'])
 //            ->send();
 
-       return View::render('register');
+        return View::render('register');
 
     }
 }

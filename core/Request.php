@@ -21,50 +21,59 @@ class Request
 
     public static function getBody($param = null)
     {
-        $body = [];
-        if (self::getMethod() === 'get') {
-            $_GET = json_decode(file_get_contents('php://input'), true);
-            foreach ($_GET as $key => $value) {
-                $body[$key] = filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
+        try {
+            $body = [];
+            if (self::getMethod() === 'get') {
+                $_GET = json_decode(file_get_contents('php://input'), true);
+                foreach ($_GET as $key => $value) {
+                    $body[$key] = filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
+                }
             }
+            if (self::getMethod() === 'post') {
+                $_POST = json_decode(file_get_contents('php://input'), true);
+                if (!empty($_POST)) {
+                    foreach ($_POST as $key => $value) {
+                        $body[$key] = filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
+                    }
+                }
+            }
+            if (self::getMethod() === 'patch') {
+                parse_str(file_get_contents('php://input'), $_PATCH);
+                if (!is_array($_PATCH)) {
+                    Response::json_response_error('invalid patch request');
+                }
+                foreach ($_PATCH as $key => $value) {
+                    $body[$key] = filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
+                }
+            }
+            if (self::getMethod() === 'put') {
+                parse_str(file_get_contents('php://input'), $_PUT);
+                if (!is_array($_PUT)) {
+                    Response::json_response_error('invalid put request');
+                }
+                foreach ($_PUT as $key => $value) {
+                    $body[$key] = filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
+                }
+            }
+            if (self::getMethod() === 'delete') {
+                parse_str(file_get_contents('php://input'), $_DELETE);
+                if (!is_array($_DELETE)) {
+                    Response::json_response_error('invalid put request');
+                }
+                foreach ($_DELETE as $key => $value) {
+                    $body[$key] = filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
+                }
+            }
+            if ($param) {
+                if (!empty($body[$param])) {
+                    return $body[$param];
+                }
+                return Response::json_response_error("$param is empty");
+            }
+            return $body;
+        } catch (\Exception $error) {
+            return Response::json_response_error($error);
         }
-        if (self::getMethod() === 'post') {
-            $_POST = json_decode(file_get_contents('php://input'), true);
-            foreach ($_POST as $key => $value) {
-                $body[$key] = filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
-            }
-        }
-        if (self::getMethod() === 'patch') {
-            parse_str(file_get_contents('php://input'), $_PATCH);
-            if (!is_array($_PATCH)) {
-                Response::json_response_error('invalid patch request');
-            }
-            foreach ($_PATCH as $key => $value) {
-                $body[$key] = filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
-            }
-        }
-        if (self::getMethod() === 'put') {
-            parse_str(file_get_contents('php://input'), $_PUT);
-            if (!is_array($_PUT)) {
-                Response::json_response_error('invalid put request');
-            }
-            foreach ($_PUT as $key => $value) {
-                $body[$key] = filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
-            }
-        }
-        if (self::getMethod() === 'delete') {
-            parse_str(file_get_contents('php://input'), $_DELETE);
-            if (!is_array($_DELETE)) {
-                Response::json_response_error('invalid put request');
-            }
-            foreach ($_DELETE as $key => $value) {
-                $body[$key] = filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
-            }
-        }
-        if ($param) {
-            return $body[$param];
-        }
-        return $body;
     }
 
     public static function getParams()

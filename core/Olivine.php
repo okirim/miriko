@@ -40,22 +40,36 @@ class Olivine
         }
     }
 
-    public static function findOne(array $param, string $columns = '')
+    public static function findOne(array $where, string $columns = '')
     {
+
         $table = self::$table;
-        $params_size = sizeof($param);
-        $i = 0;
-        $result = [];
         $fields = ['id', ...explode(',', $columns)];
         $columns = $columns === '' ? '*' : implode(',', $fields);
-        foreach ($param as $key => $value) {
-            $bindValue = self::bind($key);
-            $statement = Database::$pdo->prepare("SELECT $columns FROM $table WHERE $key=$bindValue LIMIT 1;");
-            $statement->bindParam($bindValue, $value);
-            $statement->execute();
-            $result[] = $statement->fetch(\PDO::FETCH_NAMED);
+        $attributes=array_keys($where);
+        $conditions=implode(" AND ",array_map(fn($attr)=>"$attr=:$attr",$attributes));
+
+        $statement = Database::$pdo->prepare("SELECT $columns FROM $table WHERE $conditions");
+        foreach ($where as $key => $value) {
+            $statement->bindValue(":$key", $value);
+
         }
-        return end($result);
+        $statement->execute();
+        $result = $statement->fetchObject(static::class);
+        return $result;
+//        $params_size = sizeof($param);
+//        $i = 0;
+//        $result = [];
+//        $fields = ['id', ...explode(',', $columns)];
+//        $columns = $columns === '' ? '*' : implode(',', $fields);
+//        foreach ($param as $key => $value) {
+//            $bindValue = self::bind($key);
+//            $statement = Database::$pdo->prepare("SELECT $columns FROM $table WHERE $key=$bindValue LIMIT 1;");
+//            $statement->bindParam($bindValue, $value);
+//            $statement->execute();
+//            $result[] = $statement->fetch(\PDO::FETCH_NAMED);
+//        }
+//        return end($result);
     }
 
     public static function paginate(int $limit, int $page = 1, $filter = [], string $columns = '*')
@@ -168,48 +182,60 @@ class Olivine
 
     public static function leftJoin(array $jointTables)
     {
-        $table = self::$table;
-        $id = substr($table, 0, -1) . '_id';
+         $main_table=self::$table;
+        $fk = substr(self::$table, 0, -1) . '_id';
+        $data = [];
+
+        foreach ($jointTables as $key=>$table){
+            $data[]=self::getLeftTable($main_table,$fk,$table);
+        }
+        $x= [...$data[0],...$data[1]];
+
+        return $x;
+    }
+
+    protected static function getLeftTable($table, $fk_id, string $joinTable)
+
+    {
         $results = [];
+        $statement = Database::$pdo->prepare("SELECT $table.*,$joinTable.id AS _id
+                                                         FROM $table LEFT JOIN $joinTable
+                                                         ON $table.id =$joinTable.$fk_id"
+        );
 
-           $statement = Database::$pdo->prepare("SELECT $table.*,$jointTables[0].id AS _id
-                                                         FROM $table LEFT JOIN $jointTables[0]
-                                                         ON $table.id =$id"
-                                                 );
+        $statement->execute();
+        $table1 = $statement->fetchAll(\PDO::FETCH_NAMED);
+        foreach ($table1 as $table) {
+            $id = $table['_id'];
+            if (!empty($id)) {
+                $statement = Database::$pdo->prepare("SELECT *
+                                                              FROM $joinTable
+                                                              WHERE $joinTable.id =$id"
+                );
+                $statement->execute();
+                $table2[] = $statement->fetchAll(\PDO::FETCH_NAMED);
+                $data = array_unique($table2, SORT_REGULAR);
+                for ($i = 0; $i < count($table1); $i++) {
+                    for ($j = 0; $j < count($data); $j++) {
+                        if ($table1[$i]['id'] === $data[$j][0]['user_id']
+                        ) {
 
-           $statement->execute();
-           $table1 = $statement->fetchAll(\PDO::FETCH_NAMED);
-           foreach ($table1 as $table) {
-               $id = $table['_id'];
-               if (!empty($id)) {
-                   $statement = Database::$pdo->prepare("SELECT *
-                                                              FROM $jointTables[0]
-                                                              WHERE $jointTables[0].id =$id"
-                   );
-                   $statement->execute();
-                   $table2[] = $statement->fetchAll(\PDO::FETCH_NAMED);
-                   $data = array_unique($table2,SORT_REGULAR);
-                   for ($i = 0; $i < count($table1); $i++) {
-                       for ($j = 0; $j < count($data); $j++) {
-                           if ($table1[$i]['id'] === $data[$j][0]['user_id']
-                           ) {
-                               //joinTable id = $table2[$j][0]['id']
-                               $jointTable_id = $data[$j][0]['id'];
-                               $table1[$i][$jointTables[0]][] = $data[$j][0];
-                           }
-                       }
-                       $results[$table1[$i]['id']] = $table1[$i];
+                            $table1[$i][$joinTable][] =$data[$j][0];
+                        }
+                    }
+                    $results[$table1[$i]['id']] = $table1[$i];
 
-                   }
-               }
-           }
-           foreach ($results as $key => $value) {
-               if(!empty($results[$key][$jointTables[0]])){
-                   $results[$key][$jointTables[0]] = array_unique($results[$key][$jointTables[0]], SORT_REGULAR);
-               }
-           }
-
-
-        return $results;
+                }
+            }
+        }
+        foreach ($results as $key => $value) {
+            if (!empty($results[$key][$joinTable])) {
+                $results[$key][$joinTable] = array_unique($results[$key][$joinTable], SORT_REGULAR);
+            }
+        }
+        return array_merge($results);
     }
 }
+
+
+
