@@ -85,6 +85,18 @@ class Request
     {
 
     }
+    public static function getHeader(string $header)
+    {
+        $headerKey=strtoupper(str_replace('-','_',$header));
+        return $_SERVER["HTTP_$headerKey"];
+
+    }
+    public static function getToken()
+    {
+        $authorization_header = $_SERVER['HTTP_AUTHORIZATION'];
+        $token_arr = explode(' ', $authorization_header);
+        return $token_arr[1];
+    }
 
     public static function Body($param = null)
     {

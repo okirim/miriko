@@ -13,13 +13,13 @@ use App\core\Rules;
 use App\core\View;
 use App\models\User;
 use App\rules\UserRules;
+use Carbon\Carbon;
 
 class AuthController
 {
 
     public function loginPage()
     {
-        $payload=(new JWT())->validate('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJyb2xlIjoiYWRtaW4iLCJleHAiOjI1OTM4MjgyMjJ9.JqJAAvJKpvCp4v_K-_DrKS6UZrafMbvRAaJMIwrcz74');
 
         View::setLayout('auth');
         return View::render('login');
@@ -27,6 +27,17 @@ class AuthController
 
     public function login()
     {
+//        $exp=Carbon::now()->addHours(6)->getTimestamp();
+//        $payload=[
+//            'user_id' => 1,
+//        ];
+//        $token = JWT::create($payload);
+        $jwt=Request::getToken();
+        $token= JWT::validate($jwt);
+        echo '<pre>';
+        var_dump($token);
+        echo '</pre>';
+        exit();
         $email = Request::Body('email');
         $password = Request::Body('password');
         $isValid = UserRules::login(['email' => $email, 'password' => $password]);
