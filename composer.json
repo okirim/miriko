@@ -11,6 +11,7 @@
     "vlucas/phpdotenv": "^5.3",
     "ext-pdo": "*",
     "ext-json": "*",
-    "phpmailer/phpmailer": "^6.4"
+    "phpmailer/phpmailer": "^6.4",
+    "nesbot/carbon": "^2.48"
   }
 }

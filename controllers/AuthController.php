@@ -4,6 +4,7 @@
 namespace App\controllers;
 
 
+use App\core\JWT;
 use App\core\Mail;
 use App\core\Query;
 use App\core\Request;
@@ -18,6 +19,8 @@ class AuthController
 
     public function loginPage()
     {
+        $payload=(new JWT())->validate('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJyb2xlIjoiYWRtaW4iLCJleHAiOjI1OTM4MjgyMjJ9.JqJAAvJKpvCp4v_K-_DrKS6UZrafMbvRAaJMIwrcz74');
+
         View::setLayout('auth');
         return View::render('login');
     }
