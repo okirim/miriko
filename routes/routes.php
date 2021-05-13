@@ -10,6 +10,7 @@ Router::post('/login', [AuthController::class, 'login']);
 Router::get('/login', [AuthController::class, 'loginPage']);
 Router::get('/register', [AuthController::class, 'registerPage']);
 Router::post('/register', [AuthController::class, 'register']);
+Router::patch('/validate-email', [AuthController::class, 'validateEmail']);
 //Router::patch('/register', [AuthController::class, 'register']);
 
 

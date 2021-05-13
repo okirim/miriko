@@ -49,29 +49,43 @@ class Olivine
         $attributes=array_keys($where);
         $conditions=implode(" AND ",array_map(fn($attr)=>"$attr=:$attr",$attributes));
 
-        $statement = Database::$pdo->prepare("SELECT $columns FROM $table WHERE $conditions");
+        $statement = Database::$pdo->prepare("SELECT $columns FROM $table WHERE $conditions LIMIT 1");
         foreach ($where as $key => $value) {
             $statement->bindValue(":$key", $value);
-
         }
         $statement->execute();
         $result = $statement->fetchObject(static::class);
         return $result;
-//        $params_size = sizeof($param);
-//        $i = 0;
-//        $result = [];
-//        $fields = ['id', ...explode(',', $columns)];
-//        $columns = $columns === '' ? '*' : implode(',', $fields);
-//        foreach ($param as $key => $value) {
-//            $bindValue = self::bind($key);
-//            $statement = Database::$pdo->prepare("SELECT $columns FROM $table WHERE $key=$bindValue LIMIT 1;");
-//            $statement->bindParam($bindValue, $value);
-//            $statement->execute();
-//            $result[] = $statement->fetch(\PDO::FETCH_NAMED);
-//        }
-//        return end($result);
     }
+    public static function findUser($user_id)
+    {
+        $statement = Database::$pdo->prepare("SELECT * FROM users WHERE id=:user_id 
+                                                      ORDER BY password LIMIT 1");
+        $statement->bindValue(":user_id", $user_id);
+        $statement->execute();
+        $user= $statement->fetchObject(static::class);
+        unset($user->password);
+        return $user;
+    }
+    public static function findByIdAndUpdate($id,array $attributes)
+    {
+        $table=self::$table;
+        $attributesName=array_keys($attributes);
+        if(count($attributes)>1){
+            $columns=implode(",",array_map(fn($attr)=>"$attr=:$attr, ",$attributesName));
+        }else{
+            $columns=implode(",",array_map(fn($attr)=>"$attr=:$attr ",$attributesName));
+        }
+        $condition="id=$id";
 
+        $statement = Database::$pdo->prepare("UPDATE $table SET $columns WHERE $condition");
+        foreach ($attributes as $key => $value) {
+            $statement->bindValue(":$key", $value);
+        }
+
+        return $statement->execute();
+
+    }
     public static function paginate(int $limit, int $page = 1, $filter = [], string $columns = '*')
     {
         $table = self::$table;

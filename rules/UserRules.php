@@ -12,7 +12,7 @@ class UserRules
         $email = $fields['email'];
         $password = $fields['password'];
         $rules = [
-            [$email, 'required email unique:email|users', 'invalid email'],
+            [$email, 'required email', 'invalid email'],
             [$password, 'required string', 'invalid password '],
         ];
 

@@ -33,7 +33,7 @@ class Router
         $method = Request::getMethod();
         $callback = self::$routes[$method][$path] ?? false;
         if ($callback === false) {
-         return  Response::json_response_error('page not found','failed',404);
+         return  Response::json_response_error('route not found','failed',404);
 //            return View::render('utils/_404');
         }
         if (is_string($callback)) {

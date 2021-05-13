@@ -27,19 +27,9 @@ class AuthController
 
     public function login()
     {
-//        $exp=Carbon::now()->addHours(6)->getTimestamp();
-//        $payload=[
-//            'user_id' => 1,
-//        ];
-//        $token = JWT::create($payload);
-        $jwt=Request::getToken();
-        $token= JWT::validate($jwt);
-        echo '<pre>';
-        var_dump($token);
-        echo '</pre>';
-        exit();
         $email = Request::Body('email');
         $password = Request::Body('password');
+
         $isValid = UserRules::login(['email' => $email, 'password' => $password]);
 
         if ($isValid !== true) {
@@ -53,7 +43,8 @@ class AuthController
         if (!$checkPassword) {
             return Response::json_response_error('invalid email or password');
         }
-        return Response::json_response($user);
+        $jwt = JWT::create(['user_id' => $user->id]);
+        return Response::json_response(['user' => $user, 'token' => $jwt]);
     }
 
     public function register()
@@ -78,22 +69,55 @@ class AuthController
             'email' => $email,
             'password' => password_hash($password, PASSWORD_ARGON2I),
         ];
-//      $user = Query::create('users', $data);
+
         $user = User::Olivine()::create($data);
-//        $users=User::leftJoin(['comments','posts']);
-        //User::hasMany('comments');
+        $token = JWT::create(['user_id' => $user->id]);
+        $mail = Mail::make();
+        $mail->from('okirimkadiro@gmail.com')
+            ->to('okirim.abdelkader.dev@gmail.com')
+            ->subject('test')
+            ->view('confirmation_mail.php', ['token' => $token])
+            ->send();
+
         return Response::json_response($user);
 
     }
 
+    public function validateEmail()
+    {
+        try {
+            $token = Request::Body('token');
+            $payload = JWT::validate($token);
+            if (empty($payload) || empty($payload->user_id)) {
+                return Response::json_response_error($payload);
+            }
+
+            $response = User::Olivine()::findByIdAndUpdate($payload->user_id, ['email_verified' => true]);
+
+            if ($response) {
+                return Response::json_response('validation success');
+            }
+        } catch (\Exception $err) {
+            return Response::json_response_error($err->getMessage());
+        }
+
+    }
+ public function resetPassword(){
+
+ }
     public function registerPage()
 
     {
+        //        $users=User::leftJoin(['comments','posts']);
+        //User::hasMany('comments');
+
+        ////////////////////////
+//        $user = Query::create('users', $data);
 //        $mail = Mail::make();
 //        $mail->from('okirimkadiro@gmail.com')
 //            ->to('okirim.abdelkader.dev@gmail.com')
 //            ->subject('test')
-//            ->view('message.php',['name'=>'zino'])
+//            ->view('confirmation_mail.php',['name'=>'zino'])
 //            ->send();
 
         return View::render('register');
