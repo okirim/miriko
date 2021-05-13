@@ -2,7 +2,6 @@
 
 namespace App\rules;
 
-use App\models\Model;
 use App\models\User;
 
 class UserRules

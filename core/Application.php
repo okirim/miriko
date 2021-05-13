@@ -2,6 +2,8 @@
 
 namespace App\core;
 
+use App\core\orm\Query;
+
 class Application
 {
     public Router $router;
@@ -20,7 +22,7 @@ class Application
         $this->statement=new Migrations();
         $this->query=new Query();
         $this->request=new Request();
-        $this->router = new Router($this->request);
+        $this->router = new Router();
     }
 
     public function run()

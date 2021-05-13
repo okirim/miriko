@@ -3,11 +3,9 @@
 
 namespace App\models;
 
-
-use App\core\Olivine;
+use App\core\orm\Olivine;
 use App\core\Response;
-use App\core\Rules;
-
+use App\core\rules\Rules;
 
 abstract class Model extends Olivine
 {

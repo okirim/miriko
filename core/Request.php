@@ -4,6 +4,7 @@
 namespace App\core;
 
 
+use App\core\authentification\JWT;
 use App\models\User;
 
 class Request

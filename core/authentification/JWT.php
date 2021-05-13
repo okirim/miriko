@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\core;
+namespace App\core\authentification;
 
 
 use Carbon\Carbon;
@@ -21,7 +21,7 @@ class JWT
         );
     }
 
-    public static function tokenHeader()
+    protected static function tokenHeader()
     {
         return json_encode([
             'typ' => 'JWT',
@@ -29,7 +29,7 @@ class JWT
         ]);
     }
 
-    public static function setJWTHeader(?array $tokenHeader)
+    protected static function setJWTHeader(?array $tokenHeader)
     {
         try {
             $_tokenHeader = $tokenHeader ? json_encode($tokenHeader) : self::tokenHeader();
@@ -41,15 +41,17 @@ class JWT
 
     }
 
-    public static function setJWTPayload(array $payload)
+    protected static function setJWTPayload(array $payload)
     {
-        $_payload = array_merge($payload, ['exp' => self::expireIn()]);
-        $payload_str = json_encode($_payload);
+        if(!$payload['exp']){
+            $payload = array_merge($payload, ['exp' => self::expireIn()]);
+        }
+        $payload_str = json_encode($payload);
         self::$JWT_payload = self::base64UrlEncode($payload_str);
         return new static;
     }
 
-    public static function signature()
+    protected static function signature()
     {
         try {
             $secret = $_ENV['JWT_SECRET'];
@@ -64,7 +66,7 @@ class JWT
         }
     }
 
-    public static function setJWTSignature()
+    protected static function setJWTSignature()
     {
         try {
             self::$JWT_signature = self::base64UrlEncode(self::signature());
@@ -75,7 +77,7 @@ class JWT
     }
 
 
-    public static function getToken()
+    protected static function getToken()
     {
         return self::$JWT_header . "." . self::$JWT_payload . "." . self::$JWT_signature;
     }
@@ -90,7 +92,7 @@ class JWT
 
     }
 
-    public static function expireIn()
+    protected static function expireIn()
     {
         try {
             $expireIn = trim($_ENV['JWT_EXPIRE_IN']) ?? '6h';

@@ -4,16 +4,14 @@
 namespace App\controllers;
 
 
-use App\core\JWT;
-use App\core\Mail;
-use App\core\Query;
+use App\core\authentification\JWT;
+use App\core\mails\Mail;
 use App\core\Request;
 use App\core\Response;
-use App\core\Rules;
 use App\core\View;
 use App\models\User;
 use App\rules\UserRules;
-use Carbon\Carbon;
+
 
 class AuthController
 {
