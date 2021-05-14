@@ -13,8 +13,7 @@ use App\models\User;
 
 class AuthMiddleware extends BaseMiddleware
 {
-    public  array $actions;
-
+    public array $actions;
     /**
      * AuthMiddleware constructor.
      * @param array $actions
@@ -24,7 +23,7 @@ class AuthMiddleware extends BaseMiddleware
         $this->actions = $actions;
     }
 
-    public function execute(){
+    public function handle(){
 
         if(Request::guest()){
             if (empty($actions) && in_array(Router::$action,$this->actions)){

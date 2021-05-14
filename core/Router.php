@@ -8,6 +8,7 @@ class Router
 {
     protected static array $routes;
     public static string $action;
+
     public static function get($path, $callback)
     {
         self::$routes['get'][$path] = $callback;
@@ -39,22 +40,45 @@ class Router
         $method = Request::getMethod();
         $callback = self::$routes[$method][$path] ?? false;
         if ($callback === false) {
+            return self::undefinedRoute($callback);
+        }
+        if (is_string($callback)) {
+            return self::renderView($callback);
+        }
+        self::setAction($callback[1]);
+        self::applyMiddleware($callback[0]);
+
+        return call_user_func($callback);
+    }
+
+    protected static function applyMiddleware($callback)
+    {
+        if (call_user_func([$callback, 'middleware']) !== true) {
+            return call_user_func([$callback, 'middleware']);
+        }
+    }
+
+    protected static function setAction($callback)
+    {
+        if (!empty($callback)) {
+            self::$action = $callback;
+        }
+    }
+
+    protected static function renderView(string $view)
+    {
+        if (is_string($view)) {
+            return View::render($view);
+        }
+    }
+
+    protected static function undefinedRoute($callback)
+    {
+        if ($callback === false) {
             return Response::json_response_error('route not found', 'failed', 404);
 //            return View::render('utils/_404');
         }
-        //delete after
-        if (is_string($callback)) {
-            return View::render($callback);
-        }//delete after
-        //apply middlewares
-        if(!empty($callback[1])){
-            self::$action=$callback[1];
-        }
-        if (call_user_func([$callback[0], 'middleware']) !== true) {
-            return call_user_func([$callback[0], 'middleware']);
-        }
-
-        return call_user_func($callback);
 
     }
+
 }

@@ -45,7 +45,7 @@ class JWT
     protected static function setJWTPayload(array $payload)
     {
 
-        if (!array_key_exists('exp',$payload)) {
+        if (!array_key_exists('exp', $payload)) {
             $payload = array_merge($payload, ['exp' => self::expireIn()]);
         }
         $payload_str = json_encode($payload);
@@ -179,7 +179,7 @@ class JWT
                 return false;
             }
             // split the token
-            if (empty($jwt)){
+            if (empty($jwt)) {
                 return false;
             }
             $tokenParts = explode('.', $jwt);

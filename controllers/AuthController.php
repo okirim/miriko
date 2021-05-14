@@ -7,6 +7,7 @@ namespace App\controllers;
 use App\core\authentification\JWT;
 use App\core\mails\Mail;
 use App\core\middlewares\AuthMiddleware;
+use App\core\middlewares\TestMiddleware;
 use App\core\Request;
 use App\core\Response;
 use App\core\View;
@@ -19,8 +20,8 @@ class AuthController extends BaseController
 
     public static function middleware()
     {
-       static::registerMiddleware(new AuthMiddleware(['test']));
-      return static::applyMiddleware();
+        static::registerMiddleware(new AuthMiddleware(['test']));
+        return static::applyMiddleware();
     }
 
     public function loginPage()

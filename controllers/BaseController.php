@@ -6,9 +6,11 @@ use App\core\Application;
 use App\core\middlewares\BaseMiddleware;
 use App\core\Request;
 
-class BaseController
+abstract class BaseController
 {
     public static array $middlewares;
+
+    abstract public static function middleware();
 
     public static function registerMiddleware(BaseMiddleware $middleware)
     {
@@ -19,8 +21,8 @@ class BaseController
     public static function applyMiddleware()
     {
         foreach (self::$middlewares as $middleware) {
-            if($middleware->execute()!==true){
-              return  $middleware->execute();
+            if($middleware->handle()!==true){
+              return  $middleware->handle();
             }
         }
     }
