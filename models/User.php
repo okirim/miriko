@@ -2,6 +2,8 @@
 
 namespace App\models;
 
+use App\core\Exception;
+use App\core\Request;
 use App\core\Response;
 use App\core\Rules;
 
@@ -10,6 +12,11 @@ class User extends Model
     public function __construct()
     {
         parent::__construct('users');
+    }
+
+    public static function guest()
+    {
+
     }
 
 //    public ?string $username;

@@ -6,6 +6,7 @@ namespace App\controllers;
 
 use App\core\authentification\JWT;
 use App\core\mails\Mail;
+use App\core\middlewares\AuthMiddleware;
 use App\core\Request;
 use App\core\Response;
 use App\core\View;
@@ -13,8 +14,14 @@ use App\models\User;
 use App\rules\UserRules;
 
 
-class AuthController
+class AuthController extends BaseController
 {
+
+    public static function middleware()
+    {
+       static::registerMiddleware(new AuthMiddleware(['test']));
+      return static::applyMiddleware();
+    }
 
     public function loginPage()
     {
@@ -85,7 +92,7 @@ class AuthController
     {
         try {
             $token = Request::Body('token');
-            $payload = JWT::validate($token);
+            $payload = JWT::validateOrFail($token);
             if (empty($payload) || empty($payload->user_id)) {
                 return Response::json_response_error($payload);
             }
@@ -100,9 +107,23 @@ class AuthController
         }
 
     }
- public function resetPassword(){
 
- }
+    public function resetPassword()
+    {
+
+    }
+
+    public function test()
+    {
+
+        $user = Request::me();
+        if (isset($user->id)) {
+            return Response::json_response('hello');
+        }
+        return Response::json_response_error('error req');
+
+    }
+
     public function registerPage()
 
     {

@@ -7,8 +7,14 @@ namespace App\core;
 use App\core\authentification\JWT;
 use App\models\User;
 
+
+/**
+ * Class Request
+ * @package App\core
+ */
 class Request
 {
+
     public static function getPath()
     {
         $path = $_SERVER['REQUEST_URI'] ?? '/';
@@ -43,7 +49,7 @@ class Request
             if (self::getMethod() === 'patch') {
 
 //                parse_str(file_get_contents('php://input'), $_PATCH);
-                $_PATCH=json_decode(file_get_contents('php://input'));
+                $_PATCH = json_decode(file_get_contents('php://input'));
                 if (!is_array($_PATCH)) {
                     Response::json_response_error('invalid patch request');
                 }
@@ -54,7 +60,7 @@ class Request
             }
             if (self::getMethod() === 'put') {
 
-                $_PUT=json_decode(file_get_contents('php://input'));
+                $_PUT = json_decode(file_get_contents('php://input'));
                 if (!is_array($_PUT)) {
                     Response::json_response_error('invalid put request');
                 }
@@ -63,7 +69,7 @@ class Request
                 }
             }
             if (self::getMethod() === 'delete') {
-                $_DELETE=json_decode(file_get_contents('php://input'));
+                $_DELETE = json_decode(file_get_contents('php://input'));
                 if (!is_array($_DELETE)) {
                     Response::json_response_error('invalid put request');
                 }
@@ -72,9 +78,9 @@ class Request
                 }
             }
 
-                if (!empty($body[$param])) {
-                    return $body[$param];
-                }
+            if (!empty($body[$param])) {
+                return $body[$param];
+            }
             if ($param) {
                 return Response::json_response_error("$param is empty");
             }
@@ -89,30 +95,85 @@ class Request
 
     }
 
+    /**
+     * @return mixed
+     * @throws Exception
+     */
     public static function me()
+    {
+        try {
+            try {
+                $jwt = self::getTokenOrFail();
+            } catch (\Exception $err) {
+                Exception::make($err->getMessage(), $err->getCode());
+            }
+            $payload = JWT::validateOrFail($jwt);
+            if (gettype($payload) === 'string' && empty($payload->user_id)) {
+                Exception::make($payload, 401);
+            }
+
+            $user_id = $payload->user_id;
+            return User::Olivine()::findUser($user_id);
+        } catch (\Exception $err) {
+            return Response::json_response_error($err->getMessage(), $err->getCode());
+        }
+
+    }
+
+    public static function guest()
     {
         $jwt = self::getToken();
         $payload = JWT::validate($jwt);
+
+        if ($payload === false) {
+            return true;
+        }
+        if (!isset($payload->user_id)) {
+            return true;
+        }
         $user_id = $payload->user_id;
-        return User::Olivine()::findUser($user_id);
+        if (empty($user_id)) {
+            return true;
+        }
+        $user = User::Olivine()::findUser($user_id);
+        if ($user) {
+            return false;
+        }
+        return true;
     }
 
     public static function getHeader(string $header)
     {
         $headerKey = strtoupper(str_replace('-', '_', $header));
         return $_SERVER["HTTP_$headerKey"];
+    }
 
+    public static function getTokenOrFail()
+    {
+        try {
+            if (empty($_SERVER['HTTP_AUTHORIZATION'])) {
+
+                Exception::make('UNAUTHORIZED NO BEARER TOKEN', 401);
+            }
+            $authorization_header = $_SERVER['HTTP_AUTHORIZATION'];
+
+            $token_arr = explode(' ', $authorization_header);
+            return $token_arr[1];
+        } catch (\Exception $err) {
+            Exception::make($err->getMessage(), $err->getCode());
+        }
     }
 
     public static function getToken()
     {
-        try {
-            $authorization_header = $_SERVER['HTTP_AUTHORIZATION'];
-            $token_arr = explode(' ', $authorization_header);
-            return $token_arr[1];
-        } catch (\Exception $err) {
-            Response::json_response_error($err->getMessage());
+
+        if (!array_key_exists('HTTP_AUTHORIZATION', $_SERVER)) {
+            return false;
         }
+        $authorization_header = $_SERVER['HTTP_AUTHORIZATION'];
+
+        $token_arr = explode(' ', $authorization_header);
+        return $token_arr[1];
     }
 
     public static function Body($param = null)

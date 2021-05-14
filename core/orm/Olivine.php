@@ -3,6 +3,8 @@
 
 namespace App\core\orm;
 
+use App\core\Database;
+
 class Olivine
 {
     public static string $table;

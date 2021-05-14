@@ -1,20 +1,28 @@
 <?php
+
 namespace App\controllers;
 
 use App\core\Application;
+use App\core\middlewares\BaseMiddleware;
 use App\core\Request;
 
 class BaseController
 {
-public Request $request;
+    public static array $middlewares;
 
-    /**
-     * BaseController constructor.
-     * @param Request $request
-     */
-    public function __construct(Request $request)
+    public static function registerMiddleware(BaseMiddleware $middleware)
     {
-        $this->request = $request;
+        self::$middlewares[] = $middleware;
+
+    }
+
+    public static function applyMiddleware()
+    {
+        foreach (self::$middlewares as $middleware) {
+            if($middleware->execute()!==true){
+              return  $middleware->execute();
+            }
+        }
     }
 
 }
