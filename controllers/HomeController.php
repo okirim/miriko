@@ -8,8 +8,12 @@ namespace App\controllers;
 use App\core\Request;
 use App\core\View;
 
-class HomeController
+class HomeController extends BaseController
 {
+    public static function middleware()
+    {
+        return true;
+    }
     public function index(){
         $params=['name'=>'kadiro'];
 

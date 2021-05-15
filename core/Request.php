@@ -5,6 +5,7 @@ namespace App\core;
 
 
 use App\core\authentification\JWT;
+use App\core\exceptions\Exception;
 use App\models\User;
 
 
@@ -48,7 +49,6 @@ class Request
             }
             if (self::getMethod() === 'patch') {
 
-//                parse_str(file_get_contents('php://input'), $_PATCH);
                 $_PATCH = json_decode(file_get_contents('php://input'));
                 if (!is_array($_PATCH)) {
                     Response::json_response_error('invalid patch request');
@@ -92,7 +92,7 @@ class Request
 
     public static function getParams()
     {
-
+        return Router::$params;
     }
 
     /**
@@ -124,7 +124,6 @@ class Request
     {
         $jwt = self::getToken();
         $payload = JWT::validate($jwt);
-
         if ($payload === false) {
             return true;
         }
@@ -151,8 +150,7 @@ class Request
     public static function getTokenOrFail()
     {
         try {
-            if (empty($_SERVER['HTTP_AUTHORIZATION'])) {
-
+            if (!array_key_exists('HTTP_AUTHORIZATION', $_SERVER)) {
                 Exception::make('UNAUTHORIZED NO BEARER TOKEN', 401);
             }
             $authorization_header = $_SERVER['HTTP_AUTHORIZATION'];

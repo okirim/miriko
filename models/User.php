@@ -2,7 +2,7 @@
 
 namespace App\models;
 
-use App\core\Exception;
+use App\core\exceptions\Exception;
 use App\core\Request;
 use App\core\Response;
 use App\core\Rules;

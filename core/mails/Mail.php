@@ -3,6 +3,7 @@
 
 namespace App\core\mails;
 
+use App\core\View;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 

@@ -4,6 +4,8 @@
 namespace App\core\orm;
 
 
+use App\core\Database;
+
 class Query
 {
 

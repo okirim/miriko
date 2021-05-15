@@ -4,7 +4,8 @@
 namespace App\core\authentification;
 
 
-use App\core\Exception;
+
+use App\core\exceptions\Exception;
 use Carbon\Carbon;
 
 class JWT
@@ -37,7 +38,7 @@ class JWT
             self::$JWT_header = self::base64UrlEncode($_tokenHeader);
             return new static;
         } catch (\Exception $err) {
-            Exception::make($err->getMessage(), $err->getCode());
+            Exception::make($err, $err->getCode());
         }
 
     }
@@ -64,7 +65,7 @@ class JWT
             return hash_hmac('sha256', self::$JWT_header . "." . self::$JWT_payload, $secret, true);
 
         } catch (\Exception $err) {
-            Exception::make($err->getMessage(), $err->getCode());
+            Exception::make($err, $err->getCode());
         }
     }
 
@@ -74,7 +75,7 @@ class JWT
             self::$JWT_signature = self::base64UrlEncode(self::signature());
             return new static;
         } catch (\Exception $err) {
-            Exception::make($err->getMessage(), $err->getCode());
+            Exception::make($err, $err->getCode());
         }
     }
 
@@ -89,7 +90,7 @@ class JWT
         try {
             return self::setJWTHeader($header)::setJWTPayload($payload)::setJWTSignature()::getToken();
         } catch (\Exception $err) {
-            Exception::make($err->getMessage(), $err->getCode());
+            Exception::make($err, $err->getCode());
         }
 
     }
@@ -125,7 +126,7 @@ class JWT
             }
 
         } catch (\Exception $err) {
-            Exception::make($err->getMessage(), $err->getCode());
+            Exception::make($err, $err->getCode());
         }
     }
 
@@ -166,7 +167,7 @@ class JWT
             }
             return json_decode($payload);
         } catch (\Exception $err) {
-            Exception::make($err->getMessage(), $err->getCode());
+            Exception::make($err, $err->getCode());
         }
 
     }

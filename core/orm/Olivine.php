@@ -56,13 +56,12 @@ class Olivine
             $statement->bindValue(":$key", $value);
         }
         $statement->execute();
-        $result = $statement->fetchObject(static::class);
-        return $result;
+        return  $statement->fetchObject(static::class);
     }
     public static function findUser($user_id)
     {
         $statement = Database::$pdo->prepare("SELECT * FROM users WHERE id=:user_id 
-                                                      ORDER BY password LIMIT 1");
+                                                       LIMIT 1");
         $statement->bindValue(":user_id", $user_id);
         $statement->execute();
         $user= $statement->fetchObject(static::class);

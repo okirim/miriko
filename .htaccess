@@ -1,7 +1,0 @@
-php_flag dispaly_errors on
-
-RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
-
-

@@ -5,9 +5,10 @@ namespace App\controllers;
 
 
 use App\core\authentification\JWT;
+use App\core\Event;
+use App\core\exceptions\Exception;
 use App\core\mails\Mail;
 use App\core\middlewares\AuthMiddleware;
-use App\core\middlewares\TestMiddleware;
 use App\core\Request;
 use App\core\Response;
 use App\core\View;
@@ -20,7 +21,7 @@ class AuthController extends BaseController
 
     public static function middleware()
     {
-        static::registerMiddleware(new AuthMiddleware(['test']));
+        static::registerMiddleware(new AuthMiddleware(['login']));
         return static::applyMiddleware();
     }
 
@@ -78,12 +79,8 @@ class AuthController extends BaseController
 
         $user = User::Olivine()::create($data);
         $token = JWT::create(['user_id' => $user->id]);
-        $mail = Mail::make();
-        $mail->from('okirimkadiro@gmail.com')
-            ->to('okirim.abdelkader.dev@gmail.com')
-            ->subject('test')
-            ->view('confirmation_mail.php', ['token' => $token])
-            ->send();
+
+        Event::Dispatch('email-verify', [$user, $token]);
 
         return Response::json_response($user);
 
@@ -114,14 +111,10 @@ class AuthController extends BaseController
 
     }
 
-    public function test()
+    public function test($param,$param2)
     {
-
-        $user = Request::me();
-        if (isset($user->id)) {
-            return Response::json_response('hello');
-        }
-        return Response::json_response_error('error req');
+          $params=Request::getParams();
+         echo $params;
 
     }
 
@@ -144,3 +137,12 @@ class AuthController extends BaseController
 
     }
 }
+
+//Event::Listen('email-verify', function ($user,$token) {
+//    $email = Mail::make();
+//    $email->from('okirimkadiro@gmail.com')
+//        ->to($user->email)
+//        ->subject('verify-email')
+//        ->view('confirmation_mail.php', ['token' => $token])
+//        ->send();
+//});
