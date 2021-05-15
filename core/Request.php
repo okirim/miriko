@@ -95,6 +95,16 @@ class Request
         return Router::$params;
     }
 
+    public static function getQuery(string $query)
+    {
+        if (Request::getMethod() === 'get') {
+            if (array_key_exists($query, $_GET)) {
+                return $_GET[$query];
+            }
+        }
+        return null;
+    }
+
     /**
      * @return mixed
      * @throws Exception

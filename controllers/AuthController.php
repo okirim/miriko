@@ -111,10 +111,9 @@ class AuthController extends BaseController
 
     }
 
-    public function test($param,$param2)
+    public function test()
     {
-          $params=Request::getParams();
-         echo $params;
+
 
     }
 

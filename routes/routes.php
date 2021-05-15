@@ -11,7 +11,8 @@ Router::get('/login', [AuthController::class, 'loginPage']);
 Router::get('/register', [AuthController::class, 'registerPage']);
 Router::post('/register', [AuthController::class, 'register']);
 Router::patch('/validate-email', [AuthController::class, 'validateEmail']);
-Router::post('/test/{id}/channel/{id}', [AuthController::class, 'test']);
+//Router::post('/test/{id}/channel/{id}', [AuthController::class, 'test']);
+Router::post('/test/{id}', [AuthController::class, 'test']);
 
 //Router::patch('/register', [AuthController::class, 'register']);
 
