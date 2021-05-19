@@ -14,10 +14,11 @@ class HomeController extends BaseController
     {
         return true;
     }
-    public function index(){
-        $params=['name'=>'kadiro'];
-
-        return View::render('home',$params);
+    public static function index(){
+        return View::render('home');
+//        $params=['name'=>'kadiro'];
+//
+//        return View::render('home',$params);
     }
     public function contact(){
 

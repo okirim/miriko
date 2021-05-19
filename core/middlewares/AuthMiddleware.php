@@ -24,7 +24,7 @@ class AuthMiddleware extends BaseMiddleware
     public function handle(){
 
         if(Request::guest()){
-            if (empty($actions) && in_array(Router::$action,$this->actions)){
+            if (empty($actions) && in_array(Router::getAction(),$this->actions)){
                Exception::make('forbidden route',401);
             }
         }

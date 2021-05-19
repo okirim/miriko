@@ -22,7 +22,7 @@ class Database
     {
         $this->createTableMigrations();
         $migrations = $this->selectAppliedMigrations();
-        $migrationsFiles = $this->getFilesWithoutExtents(scandir(Application::$ROOT_DIR . '/migrations'));
+        $migrationsFiles = $this->getFilesWithoutExtension(scandir(Application::$ROOT_DIR . '/migrations'));
         $migrationsNotApplied = array_diff($migrationsFiles, $migrations);
         $newMigration = $this->appliedNewMigration($migrationsNotApplied);
         $this->saveAppliedMigration($newMigration);
@@ -64,7 +64,7 @@ class Database
         }
     }
 
-    protected function getFilesWithoutExtents(array $files)
+    protected function getFilesWithoutExtension(array $files)
     {
         $filesWithoutExt = [];
         foreach ($files as $file) {

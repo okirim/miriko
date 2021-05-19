@@ -21,72 +21,79 @@ class AuthController extends BaseController
 
     public static function middleware()
     {
-        static::registerMiddleware(new AuthMiddleware(['login']));
+        static::registerMiddleware(new AuthMiddleware([]));
         return static::applyMiddleware();
     }
 
-    public function loginPage()
+    public static function loginPage()
     {
 
         View::setLayout('auth');
         return View::render('login');
     }
 
-    public function login()
+    public static function login()
     {
-        $email = Request::Body('email');
-        $password = Request::Body('password');
+        try {
+            $email = Request::Body('email');
+            $password = Request::Body('password');
 
-        $isValid = UserRules::login(['email' => $email, 'password' => $password]);
+            $isValid = UserRules::login(['email' => $email, 'password' => $password]);
 
-        if ($isValid !== true) {
-            return UserRules::login(['email' => $email, 'password' => $password]);
+            if ($isValid !== true) {
+                return UserRules::login(['email' => $email, 'password' => $password]);
+            }
+            $user = User::Olivine()::findOne(['email' => $email]);
+            if (!$user) {
+                return Response::json_response_error('user not found');
+            }
+            $checkPassword = password_verify($password, $user->password);
+            if (!$checkPassword) {
+                return Response::json_response_error('invalid email or password');
+            }
+            $jwt = JWT::create(['user_id' => $user->id]);
+            return Response::json_response(['user' => $user, 'token' => $jwt]);
+        } catch (\Exception $err) {
+            throw $err;
         }
-        $user = User::Olivine()::findOne(['email' => $email]);
-        if (!$user) {
-            return Response::json_response_error('user not found');
-        }
-        $checkPassword = password_verify($password, $user->password);
-        if (!$checkPassword) {
-            return Response::json_response_error('invalid email or password');
-        }
-        $jwt = JWT::create(['user_id' => $user->id]);
-        return Response::json_response(['user' => $user, 'token' => $jwt]);
-    }
-
-    public function register()
-    {
-
-        $username = Request::Body('username');
-        $email = Request::Body('email');
-        $password = Request::Body('password');
-        $password_confirm = Request::Body('confirm_password');
-
-        $fields = ['email' => $email,
-            'password' => $password,
-            'username' => $username,
-            'password_confirm' => $password_confirm
-        ];
-        $isValid = UserRules::register($fields);
-        if ($isValid !== true) {
-            return UserRules::register($fields);
-        }
-        $data = [
-            'username' => $username,
-            'email' => $email,
-            'password' => password_hash($password, PASSWORD_ARGON2I),
-        ];
-
-        $user = User::Olivine()::create($data);
-        $token = JWT::create(['user_id' => $user->id]);
-
-        Event::Dispatch('email-verify', [$user, $token]);
-
-        return Response::json_response($user);
 
     }
 
-    public function validateEmail()
+    public static function register()
+    {
+        try {
+            $username = Request::Body('username');
+            $email = Request::Body('email');
+            $password = Request::Body('password');
+            $password_confirm = Request::Body('confirm_password');
+
+            $fields = ['email' => $email,
+                'password' => $password,
+                'username' => $username,
+                'password_confirm' => $password_confirm
+            ];
+            $isValid = UserRules::register($fields);
+            if ($isValid !== true) {
+                return UserRules::register($fields);
+            }
+            $data = [
+                'username' => $username,
+                'email' => $email,
+                'password' => password_hash($password, PASSWORD_ARGON2I),
+            ];
+
+            $user = User::Olivine()::create($data);
+            $token = JWT::create(['user_id' => $user->id]);
+
+            Event::Dispatch('email-verify', [$user, $token]);
+
+            return Response::json_response($user);
+        } catch (\Exception $err) {
+            throw $err;
+        }
+    }
+
+    public static function validateEmail()
     {
         try {
             $token = Request::Body('token');
@@ -101,9 +108,8 @@ class AuthController extends BaseController
                 return Response::json_response('validation success');
             }
         } catch (\Exception $err) {
-            return Response::json_response_error($err->getMessage());
+            return Response::json_response_error($err->getMessage(), 'failed', $err->getCode());
         }
-
     }
 
     public function resetPassword()
@@ -111,13 +117,14 @@ class AuthController extends BaseController
 
     }
 
-    public function test()
+    public static function test($id)
     {
+        return $id;
 
 
     }
 
-    public function registerPage()
+    public static function registerPage()
 
     {
         //        $users=User::leftJoin(['comments','posts']);
@@ -137,11 +144,3 @@ class AuthController extends BaseController
     }
 }
 
-//Event::Listen('email-verify', function ($user,$token) {
-//    $email = Mail::make();
-//    $email->from('okirimkadiro@gmail.com')
-//        ->to($user->email)
-//        ->subject('verify-email')
-//        ->view('confirmation_mail.php', ['token' => $token])
-//        ->send();
-//});

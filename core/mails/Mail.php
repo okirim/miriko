@@ -3,6 +3,7 @@
 
 namespace App\core\mails;
 
+use App\core\exceptions\Exception;
 use App\core\View;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
@@ -28,15 +29,15 @@ class Mail
         //SMTP::DEBUG_SERVER = client and server messages
         $this->mail->SMTPDebug = SMTP::DEBUG_OFF;//SMTP::DEBUG_SERVER;
 
-        $this->mail->Host = $_ENV['MAIL_HOST'];
+        $this->mail->Host = $_ENV['MAIL_HOST'] ?? Exception::make('MAIL HOST is null');
 
-        $this->mail->Port = $_ENV['MAIL_PORT'];
+        $this->mail->Port = $_ENV['MAIL_PORT'] ?? Exception::make('MAIL PORT is null');
 
         $this->mail->SMTPAuth = true;
 
-        $this->mail->Username = $_ENV['MAIL_USERNAME'];
+        $this->mail->Username = $_ENV['MAIL_USERNAME'] ?? Exception::make('MAIL USERNAME is null');
 
-        $this->mail->Password = $_ENV['MAIL_PASSWORD'];
+        $this->mail->Password = $_ENV['MAIL_PASSWORD'] ?? Exception::make('MAIL PASSWORD is null');
     }
 
     public static function make()

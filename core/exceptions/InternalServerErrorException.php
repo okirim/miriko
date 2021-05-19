@@ -6,7 +6,7 @@ namespace App\core\exceptions;
 
 use Throwable;
 
-class ServerException extends \Exception
+class InternalServerErrorException extends \Exception
 {
     public function __construct($message = "", $code = 0, Throwable $previous = null)
     {

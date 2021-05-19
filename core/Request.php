@@ -16,6 +16,9 @@ use App\models\User;
 class Request
 {
 
+    /**
+     * @return false|mixed|string
+     */
     public static function getPath()
     {
         $path = $_SERVER['REQUEST_URI'] ?? '/';
@@ -24,12 +27,19 @@ class Request
         return substr($path, 0, $questionMark);
     }
 
+    /**
+     * @return string
+     */
     public static function getMethod()
     {
         return strtolower($_SERVER['REQUEST_METHOD']);
     }
 
-    public static function getBody($param = null)
+    /**
+     * @param null|string $param
+     * @return array|false|mixed|string
+     */
+    public static function getBody(?string $param)
     {
         try {
             $body = [];
@@ -85,16 +95,23 @@ class Request
                 return Response::json_response_error("$param is empty");
             }
             return $body;
-        } catch (\Exception $error) {
-            return Response::json_response_error($error);
+        } catch (\Exception $err) {
+            throw $err;
         }
     }
 
+    /**
+     * @return array
+     */
     public static function getParams()
     {
-        return Router::$params;
+        return Router::getParams();
     }
 
+    /**
+     * @param string $query
+     * @return mixed|null
+     */
     public static function getQuery(string $query)
     {
         if (Request::getMethod() === 'get') {
@@ -125,11 +142,14 @@ class Request
             $user_id = $payload->user_id;
             return User::Olivine()::findUser($user_id);
         } catch (\Exception $err) {
-            return Response::json_response_error($err->getMessage(), $err->getCode());
+            throw $err;
         }
 
     }
 
+    /**
+     * @return bool
+     */
     public static function guest()
     {
         $jwt = self::getToken();
@@ -151,12 +171,20 @@ class Request
         return true;
     }
 
+    /**
+     * @param string $header
+     * @return mixed
+     */
     public static function getHeader(string $header)
     {
         $headerKey = strtoupper(str_replace('-', '_', $header));
         return $_SERVER["HTTP_$headerKey"];
     }
 
+    /**
+     * @return mixed|string
+     * @throws Exception
+     */
     public static function getTokenOrFail()
     {
         try {
@@ -168,10 +196,13 @@ class Request
             $token_arr = explode(' ', $authorization_header);
             return $token_arr[1];
         } catch (\Exception $err) {
-            Exception::make($err->getMessage(), $err->getCode());
+            throw $err;
         }
     }
 
+    /**
+     * @return bool|mixed|string
+     */
     public static function getToken()
     {
 
@@ -184,12 +215,19 @@ class Request
         return $token_arr[1];
     }
 
+    /**
+     * @param null $param
+     * @return array|false|mixed|string
+     */
     public static function Body($param = null)
     {
         $req = self::instanceRequest();
         return $req->getBody($param);
     }
 
+    /**
+     * @return Request
+     */
     protected static function instanceRequest()
     {
         return new Request();

@@ -4,7 +4,6 @@
 namespace App\core\authentification;
 
 
-
 use App\core\exceptions\Exception;
 use Carbon\Carbon;
 
@@ -38,7 +37,7 @@ class JWT
             self::$JWT_header = self::base64UrlEncode($_tokenHeader);
             return new static;
         } catch (\Exception $err) {
-            Exception::make($err, $err->getCode());
+            throw $err;
         }
 
     }
@@ -57,15 +56,14 @@ class JWT
     protected static function signature()
     {
         try {
-            $secret = $_ENV['JWT_SECRET'];
-
+            $secret = self::JWT_SECRET();
             if (empty($secret)) {
-                Exception::make('JWT_SECRET is empty', 401);
+                Exception::make('JWT SECRET KEY is null', 401);
             }
             return hash_hmac('sha256', self::$JWT_header . "." . self::$JWT_payload, $secret, true);
 
         } catch (\Exception $err) {
-            Exception::make($err, $err->getCode());
+            Exception::make($err->getMessage(), $err->getCode());
         }
     }
 
@@ -75,7 +73,7 @@ class JWT
             self::$JWT_signature = self::base64UrlEncode(self::signature());
             return new static;
         } catch (\Exception $err) {
-            Exception::make($err, $err->getCode());
+            Exception::make($err->getMessage(), $err->getCode());
         }
     }
 
@@ -90,7 +88,7 @@ class JWT
         try {
             return self::setJWTHeader($header)::setJWTPayload($payload)::setJWTSignature()::getToken();
         } catch (\Exception $err) {
-            Exception::make($err, $err->getCode());
+            Exception::make($err->getMessage(), $err->getCode());
         }
 
     }
@@ -126,14 +124,14 @@ class JWT
             }
 
         } catch (\Exception $err) {
-            Exception::make($err, $err->getCode());
+            Exception::make($err->getMessage(), $err->getCode());
         }
     }
 
     public static function validateOrFail($jwt)
     {
         try {
-            $secret = $_ENV['JWT_SECRET'];
+            $secret = self::JWT_SECRET();
             if (empty($secret)) {
                 Exception::make('JWT_SECRET is empty', 401);
             }
@@ -141,15 +139,14 @@ class JWT
                 Exception::make('TOKEN is empty', 401);
             }
             // split the token
-            $tokenParts = explode('.', $jwt);
-            $header = base64_decode($tokenParts[0]);
-            $payload = base64_decode($tokenParts[1]);
-            $signatureProvided = $tokenParts[2];
+            $token = self::getTokenArray($jwt);
+            $header = self::getTokenHeader($token[0]);
+            $payload = self::getTokenPayload($token[1]);
+            $signatureProvided = self::getTokenSignature($token[2]);
 
             // check the expiration time - note this will cause an error if there is no 'exp' claim in the token
-            $expiration = Carbon::createFromTimestamp(json_decode($payload)->exp);
-            //$expiration =Carbon::createFromTimestamp(self::expireIn());
-            $tokenExpired = (Carbon::now()->diffInSeconds($expiration, false) < 0);
+            $expiration = self::getTokenExpireIn($payload);
+            $tokenExpired = self::isExpired($expiration);
             // build a signature based on the header and payload using the secret
             $base64UrlHeader = self::base64UrlEncode($header);
             $base64UrlPayload = self::base64UrlEncode($payload);
@@ -167,7 +164,7 @@ class JWT
             }
             return json_decode($payload);
         } catch (\Exception $err) {
-            Exception::make($err, $err->getCode());
+            Exception::make($err->getMessage(), $err->getCode());
         }
 
     }
@@ -183,16 +180,15 @@ class JWT
             if (empty($jwt)) {
                 return false;
             }
-            $tokenParts = explode('.', $jwt);
+            $token = self::getTokenArray($jwt);
 
-            $header = base64_decode($tokenParts[0]);
-            $payload = base64_decode($tokenParts[1]);
-            $signatureProvided = $tokenParts[2];
+            $header = self::getTokenHeader($token[0]);
+            $payload = self::getTokenPayload($token[1]);
+            $signatureProvided = self::getTokenSignature($token[2]);
 
             // check the expiration time - note this will cause an error if there is no 'exp' claim in the token
-            $expiration = Carbon::createFromTimestamp(json_decode($payload)->exp);
-            //$expiration =Carbon::createFromTimestamp(self::expireIn());
-            $tokenExpired = (Carbon::now()->diffInSeconds($expiration, false) < 0);
+            $expiration = self::getTokenExpireIn($payload);
+            $tokenExpired = self::isExpired($expiration);
             // build a signature based on the header and payload using the secret
             $base64UrlHeader = self::base64UrlEncode($header);
             $base64UrlPayload = self::base64UrlEncode($payload);
@@ -213,6 +209,68 @@ class JWT
             return false;
         }
 
+    }
+
+    /**
+     * @param string $jwt
+     * @return false|string[]
+     */
+    protected static function getTokenArray(string $jwt)
+    {
+        return explode('.', $jwt);
+    }
+
+    /**
+     * @param $tokenParts
+     * @return false|string
+     */
+    protected static function getTokenHeader($tokenParts)
+    {
+        return base64_decode($tokenParts);
+    }
+
+    /**
+     * @param $tokenParts
+     * @return false|string
+     */
+    protected static function getTokenPayload($tokenParts)
+    {
+        return base64_decode($tokenParts);
+    }
+
+    /**
+     * @param $tokenParts
+     * @return mixed
+     */
+    protected static function getTokenSignature($tokenParts)
+    {
+        return $tokenParts;
+    }
+
+    /**
+     * @param string $payload
+     * @return Carbon
+     */
+    protected static function getTokenExpireIn(string $payload): Carbon
+    {
+        return Carbon::createFromTimestamp(json_decode($payload)->exp);
+    }
+
+    /**
+     * @param Carbon $expiration
+     * @return bool
+     */
+    protected static function isExpired(Carbon $expiration): bool
+    {
+        return (Carbon::now()->diffInSeconds($expiration, false) < 0);
+    }
+
+    /**
+     * @return mixed
+     */
+    protected static function JWT_SECRET(): mixed
+    {
+        return $_ENV['JWT_SECRET'];
     }
 }
 

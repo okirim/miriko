@@ -20,7 +20,7 @@ class Olivine
 
     public static function create($data)
     {
-        $table = self::$table;
+        $table = self::getTable();
         $columns = [];
         $bindValues = [];
         $values = [];
@@ -44,13 +44,10 @@ class Olivine
 
     public static function findOne(array $where, string $columns = '')
     {
-
-        $table = self::$table;
-        $fields = ['id', ...explode(',', $columns)];
-        $columns = $columns === '' ? '*' : implode(',', $fields);
+        $table = self::getTable();
+        $columns = self::formatColumns($columns);;
         $attributes=array_keys($where);
         $conditions=implode(" AND ",array_map(fn($attr)=>"$attr=:$attr",$attributes));
-
         $statement = Database::$pdo->prepare("SELECT $columns FROM $table WHERE $conditions LIMIT 1");
         foreach ($where as $key => $value) {
             $statement->bindValue(":$key", $value);
@@ -60,17 +57,18 @@ class Olivine
     }
     public static function findUser($user_id)
     {
-        $statement = Database::$pdo->prepare("SELECT * FROM users WHERE id=:user_id 
-                                                       LIMIT 1");
+        $statement = Database::$pdo->prepare("SELECT * FROM users WHERE id=:user_id LIMIT 1");
         $statement->bindValue(":user_id", $user_id);
         $statement->execute();
         $user= $statement->fetchObject(static::class);
-        unset($user->password);
+       if(!empty($user->password)){
+           unset($user->password);
+       }
         return $user;
     }
     public static function findByIdAndUpdate($id,array $attributes)
     {
-        $table=self::$table;
+        $table= self::getTable();
         $attributesName=array_keys($attributes);
         if(count($attributes)>1){
             $columns=implode(",",array_map(fn($attr)=>"$attr=:$attr, ",$attributesName));
@@ -89,9 +87,9 @@ class Olivine
     }
     public static function paginate(int $limit, int $page = 1, $filter = [], string $columns = '*')
     {
-        $table = self::$table;
+        $table = self::getTable();
         $filter = self::filterQuery($filter);
-        $size = self::rowCount($table);
+        $size = self::rowCount();
         $pages = $size > 0 ? ceil($size / $limit) : 1;
         $firstPage = 1;
         $lastPage = $pages;
@@ -114,9 +112,9 @@ class Olivine
 
     public static function find(array $filter = [], $columns = '*')
     {
-        $table = self::$table;
-        $filter = self::filterQuery($filter);
-        $statement = Database::$pdo->prepare("SELECT $columns FROM $table WHERE $filter");
+        $table = self::getTable();
+        $filterBy = self::filterQuery($filter);
+        $statement = Database::$pdo->prepare("SELECT $columns FROM $table WHERE $filterBy");
 
         $statement->execute();
         return $statement->fetchAll(\PDO::FETCH_NAMED);
@@ -124,7 +122,7 @@ class Olivine
 
     public static function rowCount()
     {
-        $table = self::$table;
+        $table = self::getTable();
         $statement = Database::$pdo->prepare("SELECT * FROM $table ");
         $statement->execute();
         return $statement->rowCount();
@@ -139,7 +137,6 @@ class Olivine
     {
         $filter = count($filter) ? $filter : "''=''";
         $query = '';
-
         if (gettype($filter) === 'array' && count($filter)) {
             foreach ($filter as $key => $value) {
                 $query .= " $key '$value' ";
@@ -197,8 +194,8 @@ class Olivine
 
     public static function leftJoin(array $jointTables)
     {
-         $main_table=self::$table;
-        $fk = substr(self::$table, 0, -1) . '_id';
+         $main_table= self::getTable();
+        $fk = substr(self::getTable(), 0, -1) . '_id';
         $data = [];
 
         foreach ($jointTables as $key=>$table){
@@ -249,6 +246,26 @@ class Olivine
             }
         }
         return array_merge($results);
+    }
+
+    /**
+     * @param string $columns
+     * @return string
+     */
+    protected static function formatColumns(string $columns): string
+    {if(!empty($columns)){
+        $_= ['id', ...explode(',', $columns)];
+        return implode(',', $_);
+    }
+      return   '*';
+    }
+
+    /**
+     * @return string
+     */
+    protected static function getTable(): string
+    {
+        return self::$table;
     }
 }
 

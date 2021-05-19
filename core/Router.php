@@ -2,43 +2,60 @@
 
 namespace App\core;
 
-use App\core\exceptions\BadRequestException;
-
-
 class Router
 {
     protected static array $routes;
-    public static array $params;
-    public static string $action;
+    protected static array $params;
+    protected static string $action;
 
     public static function get($path, $callback)
     {
-        $parsed_path = self::extractParamsAndParsePath($path);
+        try {
+            $parsed_path = self::extractParamsAndParsePath($path);
+        } catch (\Exception $err) {
+            throw $err;
+        }
         self::$routes['get'][$parsed_path] = $callback;
     }
 
     public static function post($path, $callback)
     {
-        $parsed_path = self::extractParamsAndParsePath($path);
+        try {
+            $parsed_path = self::extractParamsAndParsePath($path);
+        } catch (\Exception $err) {
+            throw $err;
+        }
 
         self::$routes['post'][$parsed_path] = $callback;
     }
 
     public static function patch($path, $callback)
     {
-        $parsed_path = self::extractParamsAndParsePath($path);
+        try {
+            $parsed_path = self::extractParamsAndParsePath($path);
+        } catch (\Exception $err) {
+            throw $err;
+        }
         self::$routes['patch'][$parsed_path] = $callback;
     }
 
     public static function put($path, $callback)
     {
-        $parsed_path = self::extractParamsAndParsePath($path);
+        try {
+            $parsed_path = self::extractParamsAndParsePath($path);
+        } catch (\Exception $err) {
+            throw $err;
+        }
         self::$routes['put'][$parsed_path] = $callback;
     }
 
     public static function delete($path, $callback)
     {
-        $parsed_path = self::extractParamsAndParsePath($path);
+        try {
+            $parsed_path = self::extractParamsAndParsePath($path);
+        } catch (\Exception $err) {
+            throw $err;
+        }
         self::$routes['delete'][$parsed_path] = $callback;
     }
 
@@ -58,18 +75,21 @@ class Router
             //middleware
             self::setAction($callback[1]);
             self::applyMiddleware($callback[0]);
+
             if (!empty(self::$params)) {
                 return call_user_func_array($callback, self::$params);
             }
             return call_user_func($callback);
         } catch (\Exception $err) {
-
-            if (array_key_exists('DEBUG', $_ENV)) {
-                return Response::json_response_error($err->getMessage(), 'failed', $err->getCode());
-            }
+            return Response::json_response_error($err->getMessage(), 'failed', $err->getCode());
         }
     }
-
+   public static function getParams(){
+        return self::$params;
+}
+public static function getAction(){
+        return self::$action;
+}
     protected static function applyMiddleware($callback)
     {
         if (call_user_func([$callback, 'middleware']) !== true) {
@@ -116,7 +136,7 @@ class Router
             }
             return false;
         } catch (\Exception $err) {
-            BadRequestException::make();
+            throw $err;
         }
 
     }
