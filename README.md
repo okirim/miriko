@@ -10,6 +10,7 @@ example 1:
 ## request body
 `Request::Body('username')`
 ## validation
+`example: create class UserRules`
 ```
 <?php
 
