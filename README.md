@@ -1,18 +1,17 @@
 ## how to build PHP framework
 
-##### routes
-`Router::method(url,[Controller,'method']);`
-
+#### routes
+`Router::httpMethod(url,[MyController,'method']);`
 example 1:
-```Router::post('/login', [AuthController::class, 'login']);```
+`Router::post('/login', [AuthController::class, 'login']);`
 example 2:
-```Router::patch('/posts/{id}',[PostController::class,update])```
+`Router::patch('/posts/{id}',[PostController::class,update])`
 #####request params:
 example 1:
 `Request::getParams('id')`
 #####request body
 `Request::Body('username')`
-##### validation
+#### validation
 ```
 <?php
 
@@ -57,7 +56,7 @@ class UserRules
     }
 }
 ```
-`how to use in  controller:`
+`how to use it in controller:`
 ```
    /**
      * @param $email
@@ -69,7 +68,7 @@ class UserRules
         return UserRules::login(['email' => $email, 'password' => $password]);
     }
 ```
-#####Events
+####Events
 `register event`
 ```
 namespace App\listeners;
