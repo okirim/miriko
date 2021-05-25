@@ -1,17 +1,15 @@
 ## how to build PHP framework
 
-#### routes
+## routes
 `Router::httpMethod(url,[MyController,'method']);`
-#####example 1:
+#### example 1:
 `Router::post('/login', [AuthController::class, 'login']);`
-#####example 2:
-`Router::patch('/posts/{id}',[PostController::class,update])`
-#####request params:
+## request params:
 example 1:
 `Request::getParams('id')`
-#####request body
+## request body
 `Request::Body('username')`
-#### validation
+## validation
 ```
 <?php
 
@@ -68,7 +66,7 @@ class UserRules
         return UserRules::login(['email' => $email, 'password' => $password]);
     }
 ```
-#### Events
+## Events
 `register event in: listeners/AddEventListener `
 ```
 namespace App\listeners;
@@ -133,7 +131,7 @@ class EmailVerificationListener
 ```
  Event::Dispatch('email-verify', [$user, $token]);
 ```
-####middleware
+## middleware
 `example: create auth middleware `
 ```
 <?php
@@ -183,12 +181,12 @@ class AuthMiddleware extends BaseMiddleware
     public static function createPost(){}
     public static function deletePost(){}
 ```
-#### Response
+## Response
 ```
 Response::json_response($ata,$status,$statusCode);
 Response::json_response_error($error,$status,$statusCode);
 ```
-#### Exceptions
+## Exceptions
 ```
 Exception::make($message,$error_code);
 NotFoundException::make();
