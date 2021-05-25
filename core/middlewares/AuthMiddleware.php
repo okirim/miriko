@@ -5,7 +5,6 @@ namespace App\core\middlewares;
 
 use App\core\exceptions\Exception;
 use App\core\Request;
-use App\core\Response;
 use App\core\Router;
 
 
