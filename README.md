@@ -2,9 +2,9 @@
 
 #### routes
 `Router::httpMethod(url,[MyController,'method']);`
-example 1:
+#####example 1:
 `Router::post('/login', [AuthController::class, 'login']);`
-example 2:
+#####example 2:
 `Router::patch('/posts/{id}',[PostController::class,update])`
 #####request params:
 example 1:
@@ -68,8 +68,8 @@ class UserRules
         return UserRules::login(['email' => $email, 'password' => $password]);
     }
 ```
-####Events
-`register event`
+#### Events
+`register event in: listeners/AddEventListener `
 ```
 namespace App\listeners;
 
