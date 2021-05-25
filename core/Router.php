@@ -81,7 +81,7 @@ class Router
             }
             return call_user_func($callback);
         } catch (\Exception $err) {
-            return Response::json_response_error($err->getMessage(), 'failed', $err->getCode());
+            return Response::json_response_error($err->getMessage(), 'failed', 500);
         }
     }
    public static function getParams(){

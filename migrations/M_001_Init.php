@@ -6,12 +6,12 @@ namespace App\migrations;
 
 class M_001_Init
 {
-    public function up()
+    public static function up()
     {
         echo 'up working good!'.PHP_EOL;
     }
 
-    public function down()
+    public static function down()
     {
         echo 'down working good!'.PHP_EOL;
     }

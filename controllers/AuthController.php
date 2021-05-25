@@ -16,29 +16,33 @@ use App\models\User;
 use App\rules\UserRules;
 
 
+/**
+ * Class AuthController
+ * @package App\controllers
+ */
 class AuthController extends BaseController
 {
 
+    /**
+     * @return mixed
+     */
     public static function middleware()
     {
         static::registerMiddleware(new AuthMiddleware([]));
         return static::applyMiddleware();
     }
 
-    public static function loginPage()
-    {
-
-        View::setLayout('auth');
-        return View::render('login');
-    }
-
+    /**
+     * @return bool|false|string
+     * @throws \Exception
+     */
     public static function login()
     {
         try {
             $email = Request::Body('email');
             $password = Request::Body('password');
 
-            $isValid = UserRules::login(['email' => $email, 'password' => $password]);
+            $isValid = self::validatePasswordAndEmail($email, $password);
 
             if ($isValid !== true) {
                 return UserRules::login(['email' => $email, 'password' => $password]);
@@ -47,8 +51,7 @@ class AuthController extends BaseController
             if (!$user) {
                 return Response::json_response_error('user not found');
             }
-            $checkPassword = password_verify($password, $user->password);
-            if (!$checkPassword) {
+            if (!password_verify($password, $user->password)) {
                 return Response::json_response_error('invalid email or password');
             }
             $jwt = JWT::create(['user_id' => $user->id]);
@@ -59,6 +62,10 @@ class AuthController extends BaseController
 
     }
 
+    /**
+     * @return bool|false|string
+     * @throws \Exception
+     */
     public static function register()
     {
         try {
@@ -67,24 +74,12 @@ class AuthController extends BaseController
             $password = Request::Body('password');
             $password_confirm = Request::Body('confirm_password');
 
-            $fields = ['email' => $email,
-                'password' => $password,
-                'username' => $username,
-                'password_confirm' => $password_confirm
-            ];
-            $isValid = UserRules::register($fields);
+            list($fields, $isValid) = self::validateUserInput($email, $password, $username, $password_confirm);
             if ($isValid !== true) {
                 return UserRules::register($fields);
             }
-            $data = [
-                'username' => $username,
-                'email' => $email,
-                'password' => password_hash($password, PASSWORD_ARGON2I),
-            ];
-
-            $user = User::Olivine()::create($data);
+            $user = self::createUser($username, $email, $password);
             $token = JWT::create(['user_id' => $user->id]);
-
             Event::Dispatch('email-verify', [$user, $token]);
 
             return Response::json_response($user);
@@ -93,37 +88,73 @@ class AuthController extends BaseController
         }
     }
 
-    public static function validateEmail()
+
+    /**
+     * @param $email
+     * @param $password
+     * @return bool|false|string
+     */
+    protected static function validatePasswordAndEmail($email, $password)
     {
-        try {
-            $token = Request::Body('token');
-            $payload = JWT::validateOrFail($token);
-            if (empty($payload) || empty($payload->user_id)) {
-                return Response::json_response_error($payload);
-            }
-
-            $response = User::Olivine()::findByIdAndUpdate($payload->user_id, ['email_verified' => true]);
-
-            if ($response) {
-                return Response::json_response('validation success');
-            }
-        } catch (\Exception $err) {
-            return Response::json_response_error($err->getMessage(), 'failed', $err->getCode());
-        }
+        return UserRules::login(['email' => $email, 'password' => $password]);
     }
 
+    /**
+     * @param $email
+     * @param $password
+     * @param $username
+     * @param $password_confirm
+     * @return array
+     */
+    protected static function validateUserInput($email, $password, $username, $password_confirm): array
+    {
+        $fields = ['email' => $email,
+            'password' => $password,
+            'username' => $username,
+            'password_confirm' => $password_confirm
+        ];
+        $isValid = UserRules::register($fields);
+        return array($fields, $isValid);
+    }
+
+    /**
+     * @param $username
+     * @param $email
+     * @param $password
+     * @return mixed
+     */
+    protected static function createUser($username, $email, $password): mixed
+    {
+        $data = [
+            'username' => $username,
+            'email' => $email,
+            'password' => password_hash($password, PASSWORD_ARGON2I),
+        ];
+
+        return User::Olivine()::create($data);
+
+    }
+
+    /**
+     *
+     */
     public function resetPassword()
     {
 
     }
 
+    /**
+     * @param $id
+     * @return mixed
+     */
     public static function test($id)
     {
         return $id;
-
-
     }
 
+    /**
+     * @return string|string[]
+     */
     public static function registerPage()
 
     {
@@ -142,5 +173,36 @@ class AuthController extends BaseController
         return View::render('register');
 
     }
+    //    /**
+
+//     * @return string|string[]
+//     */
+//    public static function loginPage()
+//    {
+//
+//        View::setLayout('auth');
+//        return View::render('login');
+//    }
+//    /**
+//     * @return false|string
+//     */
+//    public static function validateEmail()
+//    {
+//        try {
+//            $token = Request::Body('token');
+//            $payload = JWT::validateOrFail($token);
+//            if (empty($payload) || empty($payload->user_id)) {
+//                return Response::json_response_error($payload);
+//            }
+//
+//            $response = User::Olivine()::findByIdAndUpdate($payload->user_id, ['email_verified' => true]);
+//
+//            if ($response) {
+//                return Response::json_response('validation success');
+//            }
+//        } catch (\Exception $err) {
+//            return Response::json_response_error($err->getMessage(), 'failed', $err->getCode());
+//        }
+//    }
 }
 

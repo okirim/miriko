@@ -8,7 +8,7 @@ use App\core\mails\Mail;
 class EmailVerificationListener
 {
 
-    public function handle($user,$token)
+    public static function  handle($user,$token)
     {
         $email = Mail::make();
         $email->from('okirimkadiro@gmail.com')
